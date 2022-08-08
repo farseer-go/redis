@@ -8,7 +8,9 @@ import (
 func Test_redisZSet(t *testing.T) {
 
 	client := NewClient("default")
-	defer client.Key.Del("key_set_z")
+	defer func() {
+		_, _ = client.Key.Del("key_set_z")
+	}()
 	//测试
 	add, err := client.ZSet.Add("key_set_z", &redisZ{1, "小猫"}, &redisZ{2, "小狗"}, &redisZ{3, "小鸟"})
 	fmt.Println("添加返回结果：", add, err)

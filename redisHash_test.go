@@ -5,15 +5,17 @@ import (
 	"testing"
 )
 
-//String 测试
+// String 测试
 func TestClientHash(t *testing.T) {
 	client := NewClient("default")
 
-	defer client.Key.Del("key_has1")
-	defer client.Key.Del("key_has2")
+	defer func() {
+		_, _ = client.Key.Del("key_has1")
+		_, _ = client.Key.Del("key_has2")
+	}()
 
 	err := client.Hash.Set("key_has1", "name", "小丽")
-	err_v2 := client.Hash.Set("key_has1", "age", 40, "address", "上海")
+	errV2 := client.Hash.Set("key_has1", "age", 40, "address", "上海")
 
 	if err == nil {
 		fmt.Printf("设置key_has1值成功.\n")
@@ -21,10 +23,10 @@ func TestClientHash(t *testing.T) {
 		fmt.Printf("设置key_has1值错误:%v\n", err)
 	}
 
-	if err_v2 == nil {
+	if errV2 == nil {
 		fmt.Printf("设置key_has1 v2 值成功.\n")
 	} else {
-		fmt.Printf("设置key_has1 v2 值错误:%v\n", err_v2)
+		fmt.Printf("设置key_has1 v2 值错误:%v\n", errV2)
 	}
 
 	get, _ := client.Hash.Get("key_has1", "name")
