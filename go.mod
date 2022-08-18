@@ -4,13 +4,15 @@ go 1.19
 
 require (
 	github.com/farseer-go/fs v0.0.0-20220807091751-56d67e061446
-	github.com/farseer-go/linq v0.0.0-20220807112737-d735cef4871f
+	github.com/farseer-go/linq v0.0.0-20220808115440-df6878297b71
 	github.com/go-redis/redis/v8 v8.11.5
 )
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/devfeel/mapper v0.7.10 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/farseer-go/collections v0.0.0-20220818081623-887acc37fdce // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
