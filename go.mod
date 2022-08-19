@@ -3,14 +3,18 @@ module github.com/farseer-go/redis
 go 1.19
 
 require (
+	github.com/farseer-go/collections v0.0.0-20220817072842-c3f0a317490f
 	github.com/farseer-go/fs v0.0.0-20220807091751-56d67e061446
-	github.com/farseer-go/linq v0.0.0-20220807112737-d735cef4871f
+	github.com/farseer-go/linq v0.0.0-20220808115440-df6878297b71
+	github.com/farseer-go/memoryCache v0.0.0-20220817162305-3fbc541e079a
 	github.com/go-redis/redis/v8 v8.11.5
 )
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/devfeel/mapper v0.7.10 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/farseer-go/mapper v0.0.0-20220810171111-9a91b2de6a70 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
@@ -22,6 +26,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.12.0 // indirect
+	github.com/studyzy/iocgo v0.0.0-20220102165609-54d474ad4d2a // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect

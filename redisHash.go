@@ -15,7 +15,7 @@ type redisHash struct {
 // SetEntity 添加并序列化成json
 func (redisHash *redisHash) SetEntity(key string, field string, entity any) error {
 	jsonContent, _ := json.Marshal(entity)
-	return redisHash.rdb.HSet(ctx, key, field, jsonContent).Err()
+	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
 }
 
 // Set 添加
@@ -26,16 +26,16 @@ func (redisHash *redisHash) Set(key string, values ...interface{}) error {
 	return redisHash.rdb.HSet(ctx, key, values).Err()
 }
 
-// SetMap 添加Map
-func (redisHash *redisHash) SetMap(key string, values map[string]string) error {
-	for k, v := range values {
-		err := redisHash.rdb.HSet(ctx, key, k, v).Err()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//// SetMap 添加Map
+//func (redisHash *redisHash) SetMap(key string, values map[string]string) error {
+//	for k, v := range values {
+//		err := redisHash.rdb.HSet(ctx, key, k, v).Err()
+//		if err != nil {
+//			return err
+//		}
+//	}
+//	return nil
+//}
 
 // Get 获取
 func (redisHash *redisHash) Get(key string, field string) (string, error) {
@@ -60,14 +60,14 @@ func (redisHash *redisHash) GetAll(key string) (map[string]string, error) {
 	return redisHash.rdb.HGetAll(ctx, key).Result()
 }
 
-// ToList 将hash.value反序列化成切片对象
+// ToArray 将hash.value反序列化成切片对象
 //
 //	type record struct {
 //		Id int `json:"id"`
 //	}
 //	var records []record
-//	ToList("test", &records)
-func (redisHash *redisHash) ToList(key string, arrSlice any) error {
+//	ToArray("test", &records)
+func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 	arrVal := reflect.ValueOf(arrSlice).Elem()
 	if arrVal.Kind() != reflect.Slice {
 		panic("arr入参必须为切片类型")
