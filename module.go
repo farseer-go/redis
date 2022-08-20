@@ -10,11 +10,11 @@ type Module struct {
 }
 
 func (module Module) DependsModule() []modules.FarseerModule {
-	return []modules.FarseerModule{modules.FarseerKernelModule{}}
+	return []modules.FarseerModule{cache.Module{}}
 }
 
 func (module Module) PreInitialize() {
-	_ = container.RegisterSingle(func() cache.ICache { return newCacheInRedis() })
+	container.Use[cache.ICache](func() cache.ICache { return newCacheInRedis() }).Name("redis").Register()
 }
 
 func (module Module) Initialize() {
