@@ -14,7 +14,7 @@ type redisHash struct {
 
 // SetEntity 添加并序列化成json
 func (redisHash *redisHash) SetEntity(key string, field string, entity any) error {
-	jsonContent, _ := json.Marshal(entity) 
+	jsonContent, _ := json.Marshal(entity)
 	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
 }
 
@@ -26,8 +26,6 @@ func (redisHash *redisHash) Set(key string, values ...interface{}) error {
 	return redisHash.rdb.HSet(ctx, key, values).Err()
 }
 
-<<<<<<< HEAD
-=======
 //// SetMap 添加Map
 //func (redisHash *redisHash) SetMap(key string, values map[string]string) error {
 //	for k, v := range values {
@@ -39,7 +37,6 @@ func (redisHash *redisHash) Set(key string, values ...interface{}) error {
 //	return nil
 //}
 
->>>>>>> a218faf5532fdef559783c3c7b20acf465bd2947
 // Get 获取
 func (redisHash *redisHash) Get(key string, field string) (string, error) {
 	return redisHash.rdb.HGet(ctx, key, field).Result()
