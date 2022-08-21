@@ -26,17 +26,6 @@ func (redisHash *redisHash) Set(key string, values ...interface{}) error {
 	return redisHash.rdb.HSet(ctx, key, values).Err()
 }
 
-//// SetMap 添加Map
-//func (redisHash *redisHash) SetMap(key string, values map[string]string) error {
-//	for k, v := range values {
-//		err := redisHash.rdb.HSet(ctx, key, k, v).Err()
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
-
 // Get 获取
 func (redisHash *redisHash) Get(key string, field string) (string, error) {
 	return redisHash.rdb.HGet(ctx, key, field).Result()
