@@ -120,46 +120,45 @@ func Test_redisHash_Set(t *testing.T) {
 	assert.Equal(t, err, nil)
 }
 
-// 结构转换成json 有点问题，json值是空的 [待继续验证]
 func Test_redisHash_SetEntity(t *testing.T) {
 	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	client := NewClient("default")
 	defer client.Key.Del("key_client")
 	type user struct {
-		name string
-		age  int
-		sex  string
+		Name string
+		Age  int
+		Sex  string
 	}
-	entity := user{name: "小吴", age: 20, sex: "男"}
-	client.Hash.SetEntity("key_client", "json", &entity)
+	entity := user{Name: "小吴", Age: 20, Sex: "男"}
+	client.Hash.SetEntity("key_client", "json", entity)
 	var entity2 user
 	client.Hash.ToEntity("key_client", "json", &entity2)
-	assert.Equal(t, entity2.age, 20)
+	assert.Equal(t, entity2.Age, 20)
 }
 
-// 结构转换成json 有点问题，json值是空的 [待继续验证]
+// array 方法待验证
 func Test_redisHash_ToArray(t *testing.T) {
 	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	client := NewClient("default")
 	defer client.Key.Del("key_client")
-	arrVal := make([]string, 0)
-	client.Hash.Set("key_client", "name", "小强", "age", 40, "address", "上海")
+	var arrVal []string
+	client.Hash.Set("key_client", "Name", "小强", "Age", 40, "Address", "上海")
 	client.Hash.ToArray("key_client", &arrVal)
 	assert.Equal(t, len(arrVal), 3)
 }
 
-// 结构转换成json 有点问题，json值是空的 [待继续验证]
 func Test_redisHash_ToEntity(t *testing.T) {
 	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	client := NewClient("default")
 	defer client.Key.Del("key_client")
 	type user struct {
-		name string
-		age  int
-		sex  string
+		Name string
+		Age  int
+		Sex  string
 	}
-	var entity user
-	client.Hash.Set("key_client", "json", "{'name':'小吴','age':20,'sex':'男'}")
-	client.Hash.ToEntity("key_client", "json", &entity)
-	assert.Equal(t, entity.sex, "男")
+	var entity2 user
+	entity := user{Name: "小吴", Age: 20, Sex: "男"}
+	client.Hash.SetEntity("key_client", "json", entity)
+	client.Hash.ToEntity("key_client", "json", &entity2)
+	assert.Equal(t, entity2.Sex, "男")
 }

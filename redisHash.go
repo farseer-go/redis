@@ -15,7 +15,8 @@ type redisHash struct {
 // SetEntity 添加并序列化成json
 func (redisHash *redisHash) SetEntity(key string, field string, entity any) error {
 	jsonContent, _ := json.Marshal(entity)
-	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
+	json := string(jsonContent)
+	return redisHash.rdb.HSet(ctx, key, field, json).Err()
 }
 
 // Set 添加
@@ -69,6 +70,7 @@ func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 
 	// 转成[]string
 	arrJson := linq.Map(result).ToValue()
+
 	// 组装成json数组
 	jsonContent := "[" + strings.Join(arrJson, ",") + "]"
 	// 反序列
