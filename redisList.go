@@ -16,8 +16,12 @@ func (redisList *redisList) Push(key string, values ...interface{}) (bool, error
 }
 
 // Set 设置指定索引的值
-func (redisList *redisList) Set(key string, index int64, value interface{}) (string, error) {
-	return redisList.rdb.LSet(ctx, key, index, value).Result()
+func (redisList *redisList) Set(key string, index int64, value interface{}) (bool, error) {
+	result, err := redisList.rdb.LSet(ctx, key, index, value).Result()
+	if result == "OK" {
+		return true, err
+	}
+	return false, err
 }
 
 // Rem 移除指定数量的value，count=0 移除全部，其他移除指定数量的

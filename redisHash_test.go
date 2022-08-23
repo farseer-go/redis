@@ -136,15 +136,20 @@ func Test_redisHash_SetEntity(t *testing.T) {
 	assert.Equal(t, entity2.Age, 20)
 }
 
-// array 方法待验证
 func Test_redisHash_ToArray(t *testing.T) {
 	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	client := NewClient("default")
 	defer client.Key.Del("key_client")
-	var arrVal []string
-	client.Hash.Set("key_client", "Name", "小强", "Age", 40, "Address", "上海")
+	type user struct {
+		Name string
+		Age  int
+		Sex  string
+	}
+	entity := user{Name: "小吴", Age: 20, Sex: "男"}
+	client.Hash.SetEntity("key_client", "json", entity)
+	var arrVal []user
 	client.Hash.ToArray("key_client", &arrVal)
-	assert.Equal(t, len(arrVal), 3)
+	assert.Equal(t, arrVal[0].Age, 20)
 }
 
 func Test_redisHash_ToEntity(t *testing.T) {

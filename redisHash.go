@@ -15,8 +15,7 @@ type redisHash struct {
 // SetEntity 添加并序列化成json
 func (redisHash *redisHash) SetEntity(key string, field string, entity any) error {
 	jsonContent, _ := json.Marshal(entity)
-	json := string(jsonContent)
-	return redisHash.rdb.HSet(ctx, key, field, json).Err()
+	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
 }
 
 // Set 添加
