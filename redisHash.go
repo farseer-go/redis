@@ -2,7 +2,7 @@ package redis
 
 import (
 	"encoding/json"
-	"github.com/farseer-go/linq"
+	"github.com/farseer-go/collections"
 	"github.com/go-redis/redis/v8"
 	"reflect"
 	"strings"
@@ -67,11 +67,10 @@ func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 		return err
 	}
 
-	// 转成[]string
-	arrJson := linq.Map(result).ToValue()
-
+	// 转成List
+	arrJson := collections.NewDictionaryFromMap(result).Values()
 	// 组装成json数组
-	jsonContent := "[" + strings.Join(arrJson, ",") + "]"
+	jsonContent := "[" + strings.Join(arrJson.ToArray(), ",") + "]"
 	// 反序列
 	return json.Unmarshal([]byte(jsonContent), arrSlice)
 }

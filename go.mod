@@ -6,7 +6,6 @@ require (
 	github.com/farseer-go/cache v0.0.0-20220819160153-38bf53487eda
 	github.com/farseer-go/collections v0.0.0-20220818081623-887acc37fdce
 	github.com/farseer-go/fs v0.0.0-20220819160142-0059145a40ac
-	github.com/farseer-go/linq v0.0.0-20220808115440-df6878297b71
 	github.com/farseer-go/mapper v0.0.0-20220820142847-0dd70cc8aa15
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/stretchr/testify v1.8.0
