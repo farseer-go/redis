@@ -67,8 +67,6 @@ github.com/farseer-go/collections v0.0.0-20220818081623-887acc37fdce h1:BWroz7mx
 github.com/farseer-go/collections v0.0.0-20220818081623-887acc37fdce/go.mod h1:T5lD+0UVhAPoBRIwGz+s8uwh26mGoj6uueevqsJl7KA=
 github.com/farseer-go/fs v0.0.0-20220819160142-0059145a40ac h1:OiM2nxXoDapLPnXJTUJx9HUMAQ6vCUPZAFXwud/mEqQ=
 github.com/farseer-go/fs v0.0.0-20220819160142-0059145a40ac/go.mod h1:mg9BZsc2+UIICdjohXH6Ne5rpIZgwqDBetLlpGAnID4=
-github.com/farseer-go/linq v0.0.0-20220808115440-df6878297b71 h1:ywi6oGV5AQzSdTfmVIMto9iWWIO9gMQApor4GX7ddQI=
-github.com/farseer-go/linq v0.0.0-20220808115440-df6878297b71/go.mod h1:E3tjZ4ITP8Rlv4sH6rd9MeIIgoZq5qfDLfKR4CRZbI8=
 github.com/farseer-go/mapper v0.0.0-20220820142847-0dd70cc8aa15 h1:U0dO3+nTThyBcbtpigi45gZIJXk1F4Wy9tEc3q00AeY=
 github.com/farseer-go/mapper v0.0.0-20220820142847-0dd70cc8aa15/go.mod h1:zbLz38d6yLf0FWyQMImIMGPQFngPDR6FRd5WaznnbMA=
 github.com/frankban/quicktest v1.14.3 h1:FJKSZTDHjyhriyC81FLQ0LY93eSai0ZyR/ZIkd3ZUKE=
