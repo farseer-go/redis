@@ -52,7 +52,7 @@ func (redisHash *redisHash) GetAll(key string) (map[string]string, error) {
 // ToArray 将hash.value反序列化成切片对象
 //
 //	type record struct {
-//		Id int `json:"id"`
+//		ClientId int `json:"id"`
 //	}
 //	var records []record
 //	ToArray("test", &records)
