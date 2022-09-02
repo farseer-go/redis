@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs/configure"
+	"github.com/farseer-go/fs/flog"
 	"testing"
 	"time"
 )
@@ -17,19 +18,19 @@ func Test_lockResult_Lock(t *testing.T) {
 
 func control01(local lockResult) {
 	if !local.TryLock() {
-		flog.Info("-----01加锁失败")
+		flog.Println("-----01加锁失败")
 	}
 	defer local.ReleaseLock()
 	for i := 0; i < 10; i++ {
-		flog.Info("-----值：a", i)
+		flog.Println("-----值：a", i)
 	}
 }
 func control02(local lockResult) {
 	if !local.TryLock() {
-		flog.Info("-----02加锁失败")
+		flog.Println("-----02加锁失败")
 	}
 	defer local.ReleaseLock()
 	for i := 0; i < 10; i++ {
-		flog.Info("-----值：b", i)
+		flog.Println("-----值：b", i)
 	}
 }
