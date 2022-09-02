@@ -12,10 +12,6 @@ import (
 type cacheInRedis struct {
 }
 
-func newCacheInRedis() cache.ICache {
-	return cacheInRedis{}
-}
-
 func (r cacheInRedis) Get(cacheKey cache.CacheKey) collections.ListAny {
 	// 动态创建切片
 	arrType := reflect.SliceOf(cacheKey.ItemType)
