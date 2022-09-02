@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"fmt"
 	"github.com/farseer-go/cache"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/modules"
@@ -14,7 +15,9 @@ func (module Module) DependsModule() []modules.FarseerModule {
 }
 
 func (module Module) PreInitialize() {
-	container.Use[cache.ICache](func() cache.ICache { return newCacheInRedis() }).Name("redis").Register()
+	container.Use[cache.ICache](func() cache.ICache { return cacheInRedis{} }).Name("redis").Register()
+	cache := container.ResolveName[cache.ICache]("redis")
+	fmt.Print(cache)
 }
 
 func (module Module) Initialize() {
