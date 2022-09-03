@@ -2,7 +2,6 @@ package redis
 
 import (
 	"github.com/farseer-go/fs/configure"
-	"github.com/farseer-go/fs/flog"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

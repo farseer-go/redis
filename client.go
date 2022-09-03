@@ -28,12 +28,12 @@ func NewClient(redisName string) *Client {
 	}
 	redisConfig := configure.ParseConfig[redisConfig](configString)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:         redisConfig.Server,                         //localhost:6379
-		Password:     redisConfig.Password,                       // no password Set
-		DB:           redisConfig.DB,                             // use default DB
-		DialTimeout:  time.Duration(redisConfig.ConnectTimeout),  //链接超时时间设置
-		WriteTimeout: time.Duration(redisConfig.SyncTimeout),     //同步超时时间设置
-		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout), //响应超时时间设置
+		Addr:         redisConfig.Server,                                            //localhost:6379
+		Password:     redisConfig.Password,                                          // no password Set
+		DB:           redisConfig.DB,                                                // use default DB
+		DialTimeout:  time.Duration(redisConfig.ConnectTimeout) * time.Millisecond,  //链接超时时间设置
+		WriteTimeout: time.Duration(redisConfig.SyncTimeout) * time.Millisecond,     //同步超时时间设置
+		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout) * time.Millisecond, //响应超时时间设置
 	})
 	key := &redisKey{rdb: rdb}
 	str := &redisString{rdb: rdb}
