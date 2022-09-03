@@ -9,6 +9,11 @@ type redisKey struct {
 	rdb *redis.Client
 }
 
+// SetTTL 设置过期时间
+func (redisKey *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
+	return redisKey.rdb.Expire(ctx, key, d).Result()
+}
+
 // TTL 获取过期时间
 func (redisKey *redisKey) TTL(key string) (time.Duration, error) {
 	return redisKey.rdb.TTL(ctx, key).Result()
