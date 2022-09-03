@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/farseer-go/cache"
 	"github.com/farseer-go/collections"
-	"github.com/farseer-go/mapper"
+	"github.com/farseer-go/fs/flog"
 	"reflect"
 )
 
@@ -13,26 +13,29 @@ type cacheInRedis struct {
 }
 
 func (r cacheInRedis) Get(cacheKey cache.CacheKey) collections.ListAny {
-	// 动态创建切片
-	arrType := reflect.SliceOf(cacheKey.ItemType)
-	arr := reflect.MakeSlice(arrType, 0, 0).Interface()
-
 	// 从redis hash中读取到slice
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_ = redisClient.Hash.ToArray(cacheKey.Key, &arr)
-
-	// 切片转ListAny
-	return mapper.ToListAny(arr)
+	lst, err := redisClient.Hash.ToListAny(cacheKey.Key, cacheKey.ItemType)
+	if err != nil {
+		flog.Error(err)
+	}
+	return lst
 }
 
 func (r cacheInRedis) GetItem(cacheKey cache.CacheKey, cacheId string) any {
 	// 动态创建实体
-	entity := reflect.New(cacheKey.ItemType).Elem().Interface()
+	entityPtr := reflect.New(cacheKey.ItemType).Interface()
 
 	// hash get
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_ = redisClient.Hash.ToEntity(cacheKey.Key, cacheId, &entity)
-	return entity
+	err := redisClient.Hash.ToEntity(cacheKey.Key, cacheId, entityPtr)
+	if err != nil {
+		if err.Error() == "redis: nil" {
+			return nil
+		}
+		flog.Error(err)
+	}
+	return reflect.ValueOf(entityPtr).Elem().Interface()
 }
 
 func (r cacheInRedis) Set(cacheKey cache.CacheKey, val collections.ListAny) {
@@ -45,22 +48,38 @@ func (r cacheInRedis) Set(cacheKey cache.CacheKey, val collections.ListAny) {
 	}
 
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_ = redisClient.Hash.Set(cacheKey.Key, values)
+	err := redisClient.Hash.Set(cacheKey.Key, values)
+	if err != nil {
+		flog.Error(err)
+	}
+	if cacheKey.RedisExpiry > 0 {
+		_, _ = redisClient.Key.SetTTL(cacheKey.Key, cacheKey.RedisExpiry)
+	}
 }
 
 func (r cacheInRedis) SaveItem(cacheKey cache.CacheKey, newVal any) {
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_ = redisClient.Hash.SetEntity(cacheKey.Key, cacheKey.UniqueField, newVal)
+	newValDataKey := cacheKey.GetUniqueId(newVal)
+	err := redisClient.Hash.SetEntity(cacheKey.Key, newValDataKey, newVal)
+	if err != nil {
+		flog.Error(err)
+	}
 }
 
 func (r cacheInRedis) Remove(cacheKey cache.CacheKey, cacheId string) {
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_, _ = redisClient.Hash.Del(cacheKey.Key, cacheId)
+	_, err := redisClient.Hash.Del(cacheKey.Key, cacheId)
+	if err != nil {
+		flog.Error(err)
+	}
 }
 
 func (r cacheInRedis) Clear(cacheKey cache.CacheKey) {
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	_, _ = redisClient.Key.Del(cacheKey.Key)
+	_, err := redisClient.Key.Del(cacheKey.Key)
+	if err != nil {
+		flog.Error(err)
+	}
 }
 
 func (r cacheInRedis) Count(cacheKey cache.CacheKey) int {
@@ -70,12 +89,18 @@ func (r cacheInRedis) Count(cacheKey cache.CacheKey) int {
 
 func (r cacheInRedis) ExistsItem(cacheKey cache.CacheKey, cacheId string) bool {
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	exists, _ := redisClient.Hash.Exists(cacheKey.Key, cacheId)
+	exists, err := redisClient.Hash.Exists(cacheKey.Key, cacheId)
+	if err != nil {
+		flog.Error(err)
+	}
 	return exists
 }
 
 func (r cacheInRedis) ExistsKey(cacheKey cache.CacheKey) bool {
 	redisClient := NewClient(cacheKey.RedisConfigName)
-	exists, _ := redisClient.Key.Exists(cacheKey.Key)
+	exists, err := redisClient.Key.Exists(cacheKey.Key)
+	if err != nil {
+		flog.Error(err)
+	}
 	return exists
 }

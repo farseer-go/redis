@@ -3,9 +3,10 @@ package redis
 import (
 	"encoding/json"
 	"github.com/farseer-go/collections"
+	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
 	"reflect"
-	"strings"
 )
 
 type redisHash struct {
@@ -23,7 +24,7 @@ func (redisHash *redisHash) SetEntity(key string, field string, entity any) erro
 //   - HSet("myhash", []string{"key1", "value1", "key2", "value2"})
 //   - HSet("myhash", map[string]interface{}{"key1": "value1", "key2": "value2"})
 func (redisHash *redisHash) Set(key string, values ...interface{}) error {
-	return redisHash.rdb.HSet(ctx, key, values).Err()
+	return redisHash.rdb.HSet(ctx, key, values...).Err()
 }
 
 // Get 获取
@@ -58,21 +59,43 @@ func (redisHash *redisHash) GetAll(key string) (map[string]string, error) {
 //	ToArray("test", &records)
 func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 	arrVal := reflect.ValueOf(arrSlice).Elem()
-	if arrVal.Kind() != reflect.Slice {
+	arrType, isSlice := types.IsSlice(arrVal)
+	if !isSlice {
 		panic("arr入参必须为切片类型")
 	}
 
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
+		flog.Error(err)
 		return err
 	}
 
-	// 转成List
-	arrJson := collections.NewDictionaryFromMap(result).Values()
-	// 组装成json数组
-	jsonContent := "[" + strings.Join(arrJson.ToArray(), ",") + "]"
-	// 反序列
-	return json.Unmarshal([]byte(jsonContent), arrSlice)
+	lst := collections.NewListAny()
+	for _, vJson := range result {
+		item := reflect.New(arrType.Elem()).Interface()
+		json.Unmarshal([]byte(vJson), item)
+		lst.Add(reflect.ValueOf(item).Elem().Interface())
+	}
+
+	lst.MapToArray(arrSlice)
+	return nil
+}
+
+// ToListAny 将hash的数据转成collections.ListAny
+func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
+	lst := collections.NewListAny()
+	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
+	if err != nil {
+		flog.Error(err)
+		return lst, err
+	}
+
+	for _, vJson := range result {
+		item := reflect.New(itemType).Interface()
+		_ = json.Unmarshal([]byte(vJson), item)
+		lst.Add(reflect.ValueOf(item).Elem().Interface())
+	}
+	return lst, nil
 }
 
 // Exists 成员是否存在
