@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/stopwatch"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
 	"reflect"
@@ -37,10 +38,13 @@ func (redisHash *redisHash) Get(key string, field string) (string, error) {
 //	var client DomainObject
 //	_ = repository.Client.Hash.ToEntity("redisKey", "field", &client)
 func (redisHash *redisHash) ToEntity(key string, field string, entity any) error {
+	sw := stopwatch.StartNew()
 	jsonContent, err := redisHash.rdb.HGet(ctx, key, field).Result()
 	if err != nil {
 		return err
 	}
+	flog.Debugf("redisHash.ToEntity：%dms", sw.ElapsedMilliseconds())
+
 	// 反序列
 	return json.Unmarshal([]byte(jsonContent), entity)
 }
@@ -84,17 +88,20 @@ func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 // ToListAny 将hash的数据转成collections.ListAny
 func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
 	lst := collections.NewListAny()
+	sw := stopwatch.StartNew()
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
+	flog.Debugf("redisHash.ToListAny：%dms", sw.ElapsedMilliseconds())
 	if err != nil {
 		flog.Error(err)
 		return lst, err
 	}
-
+	sw = stopwatch.StartNew()
 	for _, vJson := range result {
 		item := reflect.New(itemType).Interface()
 		_ = json.Unmarshal([]byte(vJson), item)
 		lst.Add(reflect.ValueOf(item).Elem().Interface())
 	}
+	flog.Debugf("redisHash.json.Unmarshal：%dms", sw.ElapsedMilliseconds())
 	return lst, nil
 }
 
