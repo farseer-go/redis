@@ -43,7 +43,7 @@ func (redisHash *redisHash) ToEntity(key string, field string, entity any) error
 	if err != nil {
 		return err
 	}
-	flog.Debugf("redisHash.ToEntity：%dms", sw.ElapsedMilliseconds())
+	flog.Debugf("redisHash.ToEntity：%s", sw.GetMillisecondsText())
 
 	// 反序列
 	return json.Unmarshal([]byte(jsonContent), entity)
@@ -90,7 +90,7 @@ func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collec
 	lst := collections.NewListAny()
 	sw := stopwatch.StartNew()
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
-	flog.Debugf("redisHash.ToListAny：%dms", sw.ElapsedMilliseconds())
+	flog.Debugf("redisHash.ToListAny：%s", sw.GetMillisecondsText())
 	if err != nil {
 		flog.Error(err)
 		return lst, err
@@ -101,7 +101,7 @@ func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collec
 		_ = json.Unmarshal([]byte(vJson), item)
 		lst.Add(reflect.ValueOf(item).Elem().Interface())
 	}
-	flog.Debugf("redisHash.json.Unmarshal：%dms", sw.ElapsedMilliseconds())
+	flog.Debugf("redisHash.json.Unmarshal：%s", sw.GetMillisecondsText())
 	return lst, nil
 }
 
