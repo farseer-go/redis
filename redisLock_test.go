@@ -3,34 +3,28 @@ package redis
 import (
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/stopwatch"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func Test_lockResult_Lock(t *testing.T) {
-	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
+	//configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
+	configure.SetDefault("Redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	client := NewClient("default")
-	local := client.Lock.GetLocker("key_local", time.Duration(1000))
-	control01(local)
-	go control02(local)
-	time.Sleep(time.Duration(100))
+	for i := 0; i < 100; i++ {
+		control01(t, client)
+	}
 }
 
-func control01(local lockResult) {
-	if !local.TryLock() {
-		flog.Println("-----01加锁失败")
-	}
+func control01(t *testing.T, client *Client) {
+	sw := stopwatch.StartNew()
+	local := client.Lock.GetLocker("key_local", 2*time.Second)
 	defer local.ReleaseLock()
-	for i := 0; i < 10; i++ {
-		flog.Println("-----值：a", i)
-	}
-}
-func control02(local lockResult) {
-	if !local.TryLock() {
-		flog.Println("-----02加锁失败")
-	}
-	defer local.ReleaseLock()
-	for i := 0; i < 10; i++ {
-		flog.Println("-----值：b", i)
-	}
+	defer func() {
+		flog.Infof("GetLocker，耗时：%s", sw.GetMillisecondsText())
+	}()
+	assert.True(t, local.TryLock())
+	assert.False(t, local.TryLock())
 }
