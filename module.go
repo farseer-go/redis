@@ -14,7 +14,7 @@ func (module Module) DependsModule() []modules.FarseerModule {
 }
 
 func (module Module) PreInitialize() {
-	container.Use[cache.ICache](func() cache.ICache { return cacheInRedis{} }).Name("redis").Register()
+	container.Register(func() cache.ICache { return cacheInRedis{} }, "redis")
 }
 
 func (module Module) Initialize() {
