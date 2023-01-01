@@ -66,14 +66,13 @@ func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
-		flog.Error(err)
-		return err
+		return flog.Error(err)
 	}
 
 	lst := collections.NewListAny()
 	for _, vJson := range result {
 		item := reflect.New(arrType.Elem()).Interface()
-		json.Unmarshal([]byte(vJson), item)
+		_ = json.Unmarshal([]byte(vJson), item)
 		lst.Add(reflect.ValueOf(item).Elem().Interface())
 	}
 
@@ -86,7 +85,7 @@ func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collec
 	lst := collections.NewListAny()
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 		return lst, err
 	}
 	for _, vJson := range result {
