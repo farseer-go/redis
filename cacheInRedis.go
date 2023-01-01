@@ -5,40 +5,58 @@ import (
 	"github.com/farseer-go/cache"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/parse"
 	"reflect"
+	"time"
 )
 
 // 二级缓存-本地缓存操作
 type cacheInRedis struct {
+	expiry          time.Duration // 设置Memory缓存过期时间
+	uniqueField     string        // hash中的主键（唯一ID的字段名称）
+	itemType        reflect.Type  // itemType
+	key             string        // 缓存KEY
+	redisConfigName string
 }
 
-func (r cacheInRedis) Get(cacheKey cache.CacheKey) collections.ListAny {
+// 创建实例
+func newCache(key string, uniqueField string, itemType reflect.Type, expiry time.Duration, redisConfigName string) cache.ICache {
+	return &cacheInRedis{
+		expiry:          expiry,
+		uniqueField:     uniqueField,
+		itemType:        itemType,
+		key:             key,
+		redisConfigName: redisConfigName,
+	}
+}
+
+func (r *cacheInRedis) Get() collections.ListAny {
 	// 从redis hash中读取到slice
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	lst, err := redisClient.Hash.ToListAny(cacheKey.Key, cacheKey.ItemType)
+	redisClient := NewClient(r.redisConfigName)
+	lst, err := redisClient.Hash.ToListAny(r.key, r.itemType)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 	return lst
 }
 
-func (r cacheInRedis) GetItem(cacheKey cache.CacheKey, cacheId string) any {
+func (r *cacheInRedis) GetItem(cacheId string) any {
 	// 动态创建实体
-	entityPtr := reflect.New(cacheKey.ItemType).Interface()
+	entityPtr := reflect.New(r.itemType).Interface()
 
 	// hash get
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	err := redisClient.Hash.ToEntity(cacheKey.Key, cacheId, entityPtr)
+	redisClient := NewClient(r.redisConfigName)
+	err := redisClient.Hash.ToEntity(r.key, cacheId, entityPtr)
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			return nil
 		}
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 	return reflect.ValueOf(entityPtr).Elem().Interface()
 }
 
-func (r cacheInRedis) Set(cacheKey cache.CacheKey, val collections.ListAny) {
+func (r *cacheInRedis) Set(val collections.ListAny) {
 	if val.Count() == 0 {
 		return
 	}
@@ -46,65 +64,71 @@ func (r cacheInRedis) Set(cacheKey cache.CacheKey, val collections.ListAny) {
 	// 将ListAny转成map
 	values := make(map[string]any)
 	for _, item := range val.ToArray() {
-		id := cacheKey.GetUniqueId(item)
+		id := r.GetUniqueId(item)
 		jsonContent, _ := json.Marshal(item)
 		values[id] = string(jsonContent)
 	}
 
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	err := redisClient.Hash.Set(cacheKey.Key, values)
+	redisClient := NewClient(r.redisConfigName)
+	err := redisClient.Hash.Set(r.key, values)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
-	if cacheKey.RedisExpiry > 0 {
-		_, _ = redisClient.Key.SetTTL(cacheKey.Key, cacheKey.RedisExpiry)
-	}
-}
-
-func (r cacheInRedis) SaveItem(cacheKey cache.CacheKey, newVal any) {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	newValDataKey := cacheKey.GetUniqueId(newVal)
-	err := redisClient.Hash.SetEntity(cacheKey.Key, newValDataKey, newVal)
-	if err != nil {
-		flog.Error(err)
+	if r.expiry > 0 {
+		_, _ = redisClient.Key.SetTTL(r.key, r.expiry)
 	}
 }
 
-func (r cacheInRedis) Remove(cacheKey cache.CacheKey, cacheId string) {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	_, err := redisClient.Hash.Del(cacheKey.Key, cacheId)
+func (r *cacheInRedis) SaveItem(newVal any) {
+	redisClient := NewClient(r.redisConfigName)
+	newValDataKey := r.GetUniqueId(newVal)
+	err := redisClient.Hash.SetEntity(r.key, newValDataKey, newVal)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 }
 
-func (r cacheInRedis) Clear(cacheKey cache.CacheKey) {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	_, err := redisClient.Key.Del(cacheKey.Key)
+func (r *cacheInRedis) Remove(cacheId string) {
+	redisClient := NewClient(r.redisConfigName)
+	_, err := redisClient.Hash.Del(r.key, cacheId)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 }
 
-func (r cacheInRedis) Count(cacheKey cache.CacheKey) int {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	return redisClient.Hash.Count(cacheKey.Key)
+func (r *cacheInRedis) Clear() {
+	redisClient := NewClient(r.redisConfigName)
+	_, err := redisClient.Key.Del(r.key)
+	if err != nil {
+		_ = flog.Error(err)
+	}
 }
 
-func (r cacheInRedis) ExistsItem(cacheKey cache.CacheKey, cacheId string) bool {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	exists, err := redisClient.Hash.Exists(cacheKey.Key, cacheId)
+func (r *cacheInRedis) Count() int {
+	redisClient := NewClient(r.redisConfigName)
+	return redisClient.Hash.Count(r.key)
+}
+
+func (r *cacheInRedis) ExistsItem(cacheId string) bool {
+	redisClient := NewClient(r.redisConfigName)
+	exists, err := redisClient.Hash.Exists(r.key, cacheId)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 	return exists
 }
 
-func (r cacheInRedis) ExistsKey(cacheKey cache.CacheKey) bool {
-	redisClient := NewClient(cacheKey.RedisConfigName)
-	exists, err := redisClient.Key.Exists(cacheKey.Key)
+func (r *cacheInRedis) ExistsKey() bool {
+	redisClient := NewClient(r.redisConfigName)
+	exists, err := redisClient.Key.Exists(r.key)
 	if err != nil {
-		flog.Error(err)
+		_ = flog.Error(err)
 	}
 	return exists
+}
+
+// GetUniqueId 获取唯一字段数据
+func (r *cacheInRedis) GetUniqueId(item any) string {
+	val := reflect.ValueOf(item).FieldByName(r.uniqueField).Interface()
+	return parse.Convert(val, "")
 }
