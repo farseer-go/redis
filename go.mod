@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/farseer-go/cache v0.1.1
 	github.com/farseer-go/collections v0.3.0
-	github.com/farseer-go/fs v0.5.0
+	github.com/farseer-go/fs v0.5.1-0.20230101111313-3216f37fdc4b
 	github.com/go-redis/redis/v8 v8.11.5
 )
 
