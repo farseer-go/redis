@@ -14,8 +14,8 @@ import (
 //	client := NewClient("default")
 //
 //	defer func() {
-//		_, _ = client.Key.Del("key_has1")
-//		_, _ = client.Key.Del("key_has2")
+//		_, _ = client.key.Del("key_has1")
+//		_, _ = client.key.Del("key_has2")
 //	}()
 //
 //	err := client.Hash.Set("key_has1", "name", "小丽")

@@ -12,7 +12,7 @@ func Test_redisList(t *testing.T) {
 
 	//client := NewClient("default")
 	//defer func() {
-	//	_, _ = client.Key.Del("key_list")
+	//	_, _ = client.key.Del("key_list")
 	//}()
 	//
 	////测试push

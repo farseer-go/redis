@@ -26,7 +26,7 @@ import (
 //	get2, _ := client.String.Get("key2")
 //	flog.Info("获取值：%v\n", get2)
 //
-//	ttl, _ := client.Key.TTL("key2")
+//	ttl, _ := client.key.TTL("key2")
 //	flog.Info("获取过期时间：%v\n", ttl)
 //}
 

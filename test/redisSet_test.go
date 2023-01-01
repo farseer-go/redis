@@ -12,11 +12,11 @@ import (
 //
 //	client := NewClient("default")
 //	defer func() {
-//		_, _ = client.Key.Del("key_set")
-//		_, _ = client.Key.Del("key_set2")
-//		_, _ = client.Key.Del("key_set_diff")
-//		_, _ = client.Key.Del("key_set_inter")
-//		_, _ = client.Key.Del("key_set_union")
+//		_, _ = client.key.Del("key_set")
+//		_, _ = client.key.Del("key_set2")
+//		_, _ = client.key.Del("key_set_diff")
+//		_, _ = client.key.Del("key_set_inter")
+//		_, _ = client.key.Del("key_set_union")
 //	}()
 //
 //	add2, err2 := client.Set.Add("key_set2", "小丽", "小王", "小白", "小赵", "小钱", "小孙")
