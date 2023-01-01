@@ -8,7 +8,7 @@ import (
 )
 
 // SetProfiles 设置内存缓存（集合）
-func SetProfiles[TEntity any](key string, uniqueField string, expiry time.Duration, redisConfigName string) {
+func SetProfiles[TEntity any](key string, uniqueField string, expiry time.Duration, redisConfigName string) cache.ICacheManage[TEntity] {
 	if uniqueField == "" {
 		exception.ThrowRefuseException("缓存集合数据时，需要设置UniqueField字段")
 	}
@@ -20,5 +20,5 @@ func SetProfiles[TEntity any](key string, uniqueField string, expiry time.Durati
 	}
 
 	cacheIns := newCache(key, uniqueField, entityType, expiry, redisConfigName)
-	cache.RegisterCacheModule(key, "redis", uniqueField, cacheIns)
+	return cache.RegisterCacheModule[TEntity](key, "redis", uniqueField, cacheIns)
 }
