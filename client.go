@@ -26,7 +26,7 @@ func NewClient(redisName string) *Client {
 	if configString == "" {
 		panic("[farseer.yaml]找不到相应的配置：Redis." + redisName)
 	}
-	redisConfig := configure.ParseConfig[redisConfig](configString)
+	redisConfig := configure.ParseString[redisConfig](configString)
 	rdb := redis.NewClient(&redis.Options{
 		Addr:         redisConfig.Server,                                            //localhost:6379
 		Password:     redisConfig.Password,                                          // no password Set
