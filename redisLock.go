@@ -31,7 +31,7 @@ func (r *lockResult) TryLock() bool {
 	cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
 	result, err := cmd.Result()
 	if err != nil {
-		flog.Errorf("redis加锁异常：%s", err.Error())
+		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
 	return result
 }
