@@ -46,12 +46,12 @@ func (r *cacheInRedis) GetItem(cacheId string) any {
 
 	// hash get
 	redisClient := NewClient(r.redisConfigName)
-	err := redisClient.Hash.ToEntity(r.key, cacheId, entityPtr)
+	exists, err := redisClient.Hash.ToEntity(r.key, cacheId, entityPtr)
 	if err != nil {
-		if err.Error() == "redis: nil" {
-			return nil
-		}
 		_ = flog.Error(err)
+	}
+	if !exists {
+		return nil
 	}
 	return reflect.ValueOf(entityPtr).Elem().Interface()
 }

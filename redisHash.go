@@ -35,14 +35,18 @@ func (redisHash *redisHash) Get(key string, field string) (string, error) {
 // ToEntity 获取单个对象
 //
 //	var client DomainObject
-//	_ = repository.Client.Hash.ToEntity("redisKey", "field", &client)
-func (redisHash *redisHash) ToEntity(key string, field string, entity any) error {
+//	_,_ = repository.Client.Hash.ToEntity("redisKey", "field", &client)
+func (redisHash *redisHash) ToEntity(key string, field string, entity any) (bool, error) {
 	jsonContent, err := redisHash.rdb.HGet(ctx, key, field).Result()
 	if err != nil {
-		return err
+		if err.Error() == "redis: nil" {
+			entity = nil
+			return false, nil
+		}
+		return false, err
 	}
 	// 反序列
-	return json.Unmarshal([]byte(jsonContent), entity)
+	return true, json.Unmarshal([]byte(jsonContent), entity)
 }
 
 // GetAll 获取所有集合数据
