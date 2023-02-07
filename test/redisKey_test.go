@@ -1,7 +1,8 @@
 package test
 
 import (
-	"github.com/farseer-go/fs/configure"
+	"github.com/farseer-go/fs"
+	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -9,29 +10,32 @@ import (
 )
 
 func Test_redisKey_Del(t *testing.T) {
-	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	client := redis.NewClient("default")
-	defer client.Key.Del("key_client")
-	client.Hash.Set("key_client", "age", 40, "address", "上海")
-	del, _ := client.Key.Del("key_client")
+
+	fs.Initialize[redis.Module]("unit test")
+	client := container.Resolve[redis.IClient]("default")
+	defer client.Del("key_client")
+	client.HashSet("key_client", "age", 40, "address", "上海")
+	del, _ := client.Del("key_client")
 	assert.Equal(t, del, true)
 }
 
 func Test_redisKey_Exists(t *testing.T) {
-	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	client := redis.NewClient("default")
-	defer client.Key.Del("key_client")
-	client.Hash.Set("key_client", "age", 40, "address", "上海")
-	exist, _ := client.Key.Exists("key_client")
+
+	fs.Initialize[redis.Module]("unit test")
+	client := container.Resolve[redis.IClient]("default")
+	defer client.Del("key_client")
+	client.HashSet("key_client", "age", 40, "address", "上海")
+	exist, _ := client.Exists("key_client")
 	assert.Equal(t, exist, true)
 }
 
 func Test_redisKey_TTL(t *testing.T) {
-	configure.SetDefault("Redis.default", "Server=localhost:6379,DB=15,Password=redis123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	client := redis.NewClient("default")
-	defer client.Key.Del("key_client")
-	client.Hash.Set("key_client", "age", 40, "address", "上海")
-	ttl, _ := client.Key.TTL("key_client")
+
+	fs.Initialize[redis.Module]("unit test")
+	client := container.Resolve[redis.IClient]("default")
+	defer client.Del("key_client")
+	client.HashSet("key_client", "age", 40, "address", "上海")
+	ttl, _ := client.TTL("key_client")
 	assert.Equal(t, ttl, time.Duration(-1))
 
 }

@@ -1,10 +1,8 @@
 package test
 
 import (
-	"github.com/farseer-go/cache"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs"
-	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -18,13 +16,11 @@ type po struct {
 
 func TestCacheInRedis_Set(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
 	assert.Panics(t, func() {
-		cache.SetProfilesInRedis[po]("test", "default", "ClientName", 0)
+		redis.SetProfiles[po]("test", "ClientName", 0, "default")
 	})
 
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	lst := collections.NewList(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Set(lst.ToArray()...)
 
@@ -45,9 +41,8 @@ func TestCacheInRedis_Set(t *testing.T) {
 
 func TestCacheInRedis_GetItem(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	item1, _ := cacheManage.GetItem("steden")
 
@@ -62,9 +57,8 @@ func TestCacheInRedis_GetItem(t *testing.T) {
 
 func TestCacheInRedis_SaveItem(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.SaveItem(po{Name: "steden", Age: 99})
 	item1, _ := cacheManage.GetItem("steden")
@@ -80,9 +74,8 @@ func TestCacheInRedis_SaveItem(t *testing.T) {
 
 func TestCacheInRedis_Remove(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Remove("steden")
 
@@ -96,9 +89,8 @@ func TestCacheInRedis_Remove(t *testing.T) {
 
 func TestCacheInRedis_Clear(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	assert.Equal(t, cacheManage.Count(), 2)
 	cacheManage.Clear()
@@ -107,9 +99,8 @@ func TestCacheInRedis_Clear(t *testing.T) {
 
 func TestCacheInRedis_Exists(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 0)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
 	assert.False(t, cacheManage.ExistsKey())
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	assert.True(t, cacheManage.ExistsKey())
@@ -117,9 +108,8 @@ func TestCacheInRedis_Exists(t *testing.T) {
 
 func TestCacheInRedis_Ttl(t *testing.T) {
 	fs.Initialize[redis.Module]("unit test")
-	configure.SetDefault("redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	cache.SetProfilesInRedis[po]("test", "default", "Name", 1*time.Second)
-	cacheManage := cache.GetCacheManage[po]("test")
+
+	cacheManage := redis.SetProfiles[po]("test", "Name", 1*time.Second, "default")
 	lst := collections.NewList(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Set(lst.ToArray()...)
 	lst2 := cacheManage.Get()

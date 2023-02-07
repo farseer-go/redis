@@ -13,34 +13,27 @@ type redisHash struct {
 	rdb *redis.Client
 }
 
-// SetEntity 添加并序列化成json
-func (redisHash *redisHash) SetEntity(key string, field string, entity any) error {
+func (redisHash *redisHash) HashSetEntity(key string, field string, entity any) error {
 	jsonContent, _ := json.Marshal(entity)
 	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
 }
 
-// Set 添加
-//   - HSet("myhash", "key1", "value1", "key2", "value2")
-//   - HSet("myhash", []string{"key1", "value1", "key2", "value2"})
-//   - HSet("myhash", map[string]interface{}{"key1": "value1", "key2": "value2"})
-func (redisHash *redisHash) Set(key string, values ...interface{}) error {
-	return redisHash.rdb.HSet(ctx, key, values...).Err()
+func (redisHash *redisHash) HashSet(key string, fieldValues ...any) error {
+	return redisHash.rdb.HSet(ctx, key, fieldValues...).Err()
 }
 
-// Get 获取
-func (redisHash *redisHash) Get(key string, field string) (string, error) {
+func (redisHash *redisHash) HashGet(key string, field string) (string, error) {
 	return redisHash.rdb.HGet(ctx, key, field).Result()
 }
 
-// ToEntity 获取单个对象
-//
-//	var client DomainObject
-//	_,_ = repository.Client.Hash.ToEntity("redisKey", "field", &client)
-func (redisHash *redisHash) ToEntity(key string, field string, entity any) (bool, error) {
+func (redisHash *redisHash) HashGetAll(key string) (map[string]string, error) {
+	return redisHash.rdb.HGetAll(ctx, key).Result()
+}
+
+func (redisHash *redisHash) HashToEntity(key string, field string, entity any) (bool, error) {
 	jsonContent, err := redisHash.rdb.HGet(ctx, key, field).Result()
 	if err != nil {
 		if err.Error() == "redis: nil" {
-			entity = nil
 			return false, nil
 		}
 		return false, err
@@ -49,19 +42,7 @@ func (redisHash *redisHash) ToEntity(key string, field string, entity any) (bool
 	return true, json.Unmarshal([]byte(jsonContent), entity)
 }
 
-// GetAll 获取所有集合数据
-func (redisHash *redisHash) GetAll(key string) (map[string]string, error) {
-	return redisHash.rdb.HGetAll(ctx, key).Result()
-}
-
-// ToArray 将hash.value反序列化成切片对象
-//
-//	type record struct {
-//		ClientId int `json:"id"`
-//	}
-//	var records []record
-//	ToArray("test", &records)
-func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
+func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
 	arrVal := reflect.ValueOf(arrSlice).Elem()
 	arrType, isSlice := types.IsSlice(arrVal)
 	if !isSlice {
@@ -84,8 +65,7 @@ func (redisHash *redisHash) ToArray(key string, arrSlice any) error {
 	return nil
 }
 
-// ToListAny 将hash的数据转成collections.ListAny
-func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
+func (redisHash *redisHash) HashToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
 	lst := collections.NewListAny()
 	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
@@ -100,19 +80,16 @@ func (redisHash *redisHash) ToListAny(key string, itemType reflect.Type) (collec
 	return lst, nil
 }
 
-// Exists 成员是否存在
-func (redisHash *redisHash) Exists(key string, field string) (bool, error) {
+func (redisHash *redisHash) HashExists(key string, field string) (bool, error) {
 	return redisHash.rdb.HExists(ctx, key, field).Result()
 }
 
-// Del 移除指定成员
-func (redisHash *redisHash) Del(key string, fields ...string) (bool, error) {
+func (redisHash *redisHash) HashDel(key string, fields ...string) (bool, error) {
 	result, err := redisHash.rdb.HDel(ctx, key, fields...).Result()
 	return result > 0, err
 }
 
-// Count 获取hash的数量
-func (redisHash *redisHash) Count(key string) int {
+func (redisHash *redisHash) HashCount(key string) int {
 	hLen := redisHash.rdb.HLen(ctx, key)
 	count, _ := hLen.Uint64()
 	return int(count)

@@ -2,7 +2,9 @@ package redis
 
 import (
 	"github.com/farseer-go/cache"
+	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/modules"
 )
 
@@ -18,6 +20,19 @@ func (module Module) PreInitialize() {
 }
 
 func (module Module) Initialize() {
+	redisConfigs := configure.GetSubNodes("Redis")
+	for name, configString := range redisConfigs {
+		config := configure.ParseString[redisConfig](configString.(string))
+		if config.Server == "" {
+			_ = flog.Error("Redis配置缺少Server节点")
+			continue
+		}
+
+		// 注册实例
+		container.Register(func() IClient {
+			return newClient(config)
+		}, name)
+	}
 }
 
 func (module Module) PostInitialize() {
