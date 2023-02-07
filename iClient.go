@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/core"
+	"github.com/go-redis/redis/v8"
 	"reflect"
 	"time"
 )
@@ -115,4 +116,9 @@ type IClient interface {
 
 	// LockNew 获得一个锁
 	LockNew(key string, expiration time.Duration) core.ILock
+
+	// Publish 发布消息
+	Publish(channel string, message any) (int64, error)
+	// Subscribe 订阅消息
+	Subscribe(channels ...string) <-chan *redis.Message
 }

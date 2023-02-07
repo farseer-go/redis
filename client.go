@@ -7,13 +7,14 @@ import (
 )
 
 type Client struct {
-	*redisKey
-	*redisString
-	*redisHash
-	*redisList
-	*redisSet
-	*redisZSet
-	*redisLock
+	redisKey
+	redisString
+	redisHash
+	redisList
+	redisSet
+	redisZSet
+	redisLock
+	redisPub
 }
 
 // 上下文定义
@@ -31,12 +32,13 @@ func newClient(redisConfig redisConfig) IClient {
 	})
 
 	return &Client{
-		redisKey:    &redisKey{rdb: rdb},
-		redisString: &redisString{rdb: rdb},
-		redisHash:   &redisHash{rdb: rdb},
-		redisList:   &redisList{rdb: rdb},
-		redisSet:    &redisSet{rdb: rdb},
-		redisZSet:   &redisZSet{rdb: rdb},
-		redisLock:   &redisLock{rdb: rdb},
+		redisKey:    redisKey{rdb: rdb},
+		redisString: redisString{rdb: rdb},
+		redisHash:   redisHash{rdb: rdb},
+		redisList:   redisList{rdb: rdb},
+		redisSet:    redisSet{rdb: rdb},
+		redisZSet:   redisZSet{rdb: rdb},
+		redisLock:   redisLock{rdb: rdb},
+		redisPub:    redisPub{rdb: rdb},
 	}
 }
