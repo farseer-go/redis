@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-// 订阅者的函数
-type consumerFunc func(message any, ea core.EventArgs)
-
 type registerEvent struct {
 	eventName string
 	client    IClient
@@ -31,7 +28,7 @@ func (c *registerEvent) Publish(message any) error {
 }
 
 // RegisterEvent 注册core.IEvent实现
-func RegisterEvent(redisConfigName, eventName string, fns ...consumerFunc) {
+func RegisterEvent(redisConfigName, eventName string, fns ...core.ConsumerFunc) {
 	client := container.Resolve[IClient](redisConfigName)
 	// 注册仓储
 	container.Register(func() core.IEvent {
@@ -44,7 +41,7 @@ func RegisterEvent(redisConfigName, eventName string, fns ...consumerFunc) {
 	go subscribe(client, eventName, fns)
 }
 
-func subscribe(client IClient, eventName string, fns []consumerFunc) {
+func subscribe(client IClient, eventName string, fns []core.ConsumerFunc) {
 	for message := range client.Subscribe(eventName) {
 		eventArgs := core.EventArgs{
 			Id:         strconv.FormatInt(snowflake.GenerateId(), 10),
