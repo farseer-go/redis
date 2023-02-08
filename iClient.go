@@ -9,6 +9,9 @@ import (
 )
 
 type IClient interface {
+	// RegisterEvent 注册core.IEvent实现
+	RegisterEvent(eventName string, fns ...core.ConsumerFunc)
+
 	// SetTTL 设置过期时间
 	SetTTL(key string, d time.Duration) (bool, error)
 	// TTL 获取过期时间

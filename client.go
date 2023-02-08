@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"github.com/farseer-go/fs/container"
+	"github.com/farseer-go/fs/core"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -41,4 +43,16 @@ func newClient(redisConfig redisConfig) IClient {
 		redisLock:   redisLock{rdb: rdb},
 		redisPub:    redisPub{rdb: rdb},
 	}
+}
+
+func (receiver *Client) RegisterEvent(eventName string, fns ...core.ConsumerFunc) {
+	// 注册仓储
+	container.Register(func() core.IEvent {
+		return &registerEvent{
+			eventName: eventName,
+			client:    receiver,
+		}
+	}, eventName)
+
+	go subscribe(receiver, eventName, fns)
 }
