@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Client struct {
+type client struct {
 	redisKey
 	redisString
 	redisHash
@@ -33,7 +33,7 @@ func newClient(redisConfig redisConfig) IClient {
 		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout) * time.Millisecond, //响应超时时间设置
 	})
 
-	return &Client{
+	return &client{
 		redisKey:    redisKey{rdb: rdb},
 		redisString: redisString{rdb: rdb},
 		redisHash:   redisHash{rdb: rdb},
@@ -45,7 +45,7 @@ func newClient(redisConfig redisConfig) IClient {
 	}
 }
 
-func (receiver *Client) RegisterEvent(eventName string, fns ...core.ConsumerFunc) {
+func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc) {
 	// 注册仓储
 	container.Register(func() core.IEvent {
 		return &registerEvent{
