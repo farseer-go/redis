@@ -40,12 +40,12 @@ func (r *cacheInRedis) Get() collections.ListAny {
 	return lst
 }
 
-func (r *cacheInRedis) GetItem(cacheId string) any {
+func (r *cacheInRedis) GetItem(cacheId any) any {
 	// 动态创建实体
 	entityPtr := reflect.New(r.itemType).Interface()
 
 	// hash get
-	exists, err := r.redisClient.HashToEntity(r.key, cacheId, entityPtr)
+	exists, err := r.redisClient.HashToEntity(r.key, parse.Convert(cacheId, ""), entityPtr)
 	if err != nil {
 		_ = flog.Error(err)
 	}
@@ -85,8 +85,8 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 	}
 }
 
-func (r *cacheInRedis) Remove(cacheId string) {
-	_, err := r.redisClient.HashDel(r.key, cacheId)
+func (r *cacheInRedis) Remove(cacheId any) {
+	_, err := r.redisClient.HashDel(r.key, parse.Convert(cacheId, ""))
 	if err != nil {
 		_ = flog.Error(err)
 	}
@@ -103,8 +103,8 @@ func (r *cacheInRedis) Count() int {
 	return r.redisClient.HashCount(r.key)
 }
 
-func (r *cacheInRedis) ExistsItem(cacheId string) bool {
-	exists, err := r.redisClient.HashExists(r.key, cacheId)
+func (r *cacheInRedis) ExistsItem(cacheId any) bool {
+	exists, err := r.redisClient.HashExists(r.key, parse.Convert(cacheId, ""))
 	if err != nil {
 		_ = flog.Error(err)
 	}
