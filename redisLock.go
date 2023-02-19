@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/stopwatch"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -28,8 +29,10 @@ func (r redisLock) LockNew(key string, expiration time.Duration) core.ILock {
 
 // TryLock 尝试加锁
 func (r *lockResult) TryLock() bool {
+	sw := stopwatch.StartNew()
 	cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
 	result, err := cmd.Result()
+	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
@@ -38,8 +41,10 @@ func (r *lockResult) TryLock() bool {
 
 // TryLockRun 尝试加锁，执行完后，自动释放锁
 func (r *lockResult) TryLockRun(fn func()) bool {
+	sw := stopwatch.StartNew()
 	cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
 	result, err := cmd.Result()
+	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
@@ -52,9 +57,11 @@ func (r *lockResult) TryLockRun(fn func()) bool {
 
 // GetLock 获取锁，直到获取成功
 func (r *lockResult) GetLock() {
+	sw := stopwatch.StartNew()
 	for {
 		cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
 		result, err := cmd.Result()
+		flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 		if err != nil {
 			_ = flog.Errorf("redis加锁异常：%s", err.Error())
 		}
