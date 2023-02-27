@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"github.com/farseer-go/collections"
+	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
@@ -15,25 +16,25 @@ type redisHash struct {
 
 func (redisHash *redisHash) HashSetEntity(key string, field string, entity any) error {
 	jsonContent, _ := json.Marshal(entity)
-	return redisHash.rdb.HSet(ctx, key, field, string(jsonContent)).Err()
+	return redisHash.rdb.HSet(fs.Context, key, field, string(jsonContent)).Err()
 }
 
 func (redisHash *redisHash) HashSet(key string, fieldValues ...any) error {
-	return redisHash.rdb.HSet(ctx, key, fieldValues...).Err()
+	return redisHash.rdb.HSet(fs.Context, key, fieldValues...).Err()
 }
 
 func (redisHash *redisHash) HashGet(key string, field string) (string, error) {
-	return redisHash.rdb.HGet(ctx, key, field).Result()
+	return redisHash.rdb.HGet(fs.Context, key, field).Result()
 }
 
 func (redisHash *redisHash) HashGetAll(key string) (map[string]string, error) {
-	return redisHash.rdb.HGetAll(ctx, key).Result()
+	return redisHash.rdb.HGetAll(fs.Context, key).Result()
 }
 
 func (redisHash *redisHash) HashToEntity(key string, field string, entity any) (bool, error) {
-	jsonContent, err := redisHash.rdb.HGet(ctx, key, field).Result()
+	jsonContent, err := redisHash.rdb.HGet(fs.Context, key, field).Result()
 	if err != nil {
-		if err.Error() == "redis: nil" {
+		if err == redis.Nil {
 			return false, nil
 		}
 		return false, err
@@ -49,7 +50,7 @@ func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
 		panic("arr入参必须为切片类型")
 	}
 
-	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
+	result, err := redisHash.rdb.HGetAll(fs.Context, key).Result()
 	if err != nil {
 		return flog.Error(err)
 	}
@@ -67,7 +68,7 @@ func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
 
 func (redisHash *redisHash) HashToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
 	lst := collections.NewListAny()
-	result, err := redisHash.rdb.HGetAll(ctx, key).Result()
+	result, err := redisHash.rdb.HGetAll(fs.Context, key).Result()
 	if err != nil {
 		_ = flog.Error(err)
 		return lst, err
@@ -81,16 +82,16 @@ func (redisHash *redisHash) HashToListAny(key string, itemType reflect.Type) (co
 }
 
 func (redisHash *redisHash) HashExists(key string, field string) (bool, error) {
-	return redisHash.rdb.HExists(ctx, key, field).Result()
+	return redisHash.rdb.HExists(fs.Context, key, field).Result()
 }
 
 func (redisHash *redisHash) HashDel(key string, fields ...string) (bool, error) {
-	result, err := redisHash.rdb.HDel(ctx, key, fields...).Result()
+	result, err := redisHash.rdb.HDel(fs.Context, key, fields...).Result()
 	return result > 0, err
 }
 
 func (redisHash *redisHash) HashCount(key string) int {
-	hLen := redisHash.rdb.HLen(ctx, key)
+	hLen := redisHash.rdb.HLen(fs.Context, key)
 	count, _ := hLen.Uint64()
 	return int(count)
 }

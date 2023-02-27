@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/stopwatch"
@@ -30,7 +31,7 @@ func (r redisLock) LockNew(key string, expiration time.Duration) core.ILock {
 // TryLock 尝试加锁
 func (r *lockResult) TryLock() bool {
 	sw := stopwatch.StartNew()
-	cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
+	cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
 	result, err := cmd.Result()
 	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
@@ -42,7 +43,7 @@ func (r *lockResult) TryLock() bool {
 // TryLockRun 尝试加锁，执行完后，自动释放锁
 func (r *lockResult) TryLockRun(fn func()) bool {
 	sw := stopwatch.StartNew()
-	cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
+	cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
 	result, err := cmd.Result()
 	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
@@ -59,7 +60,7 @@ func (r *lockResult) TryLockRun(fn func()) bool {
 func (r *lockResult) GetLock() {
 	sw := stopwatch.StartNew()
 	for {
-		cmd := r.rdb.SetNX(ctx, r.key, 1, r.expiration)
+		cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
 		result, err := cmd.Result()
 		flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 		if err != nil {
@@ -84,5 +85,5 @@ func (r *lockResult) GetLockRun(fn func()) {
 
 // ReleaseLock 锁放锁
 func (r *lockResult) ReleaseLock() {
-	r.rdb.Del(ctx, r.key)
+	r.rdb.Del(fs.Context, r.key)
 }
