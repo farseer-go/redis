@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"context"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/go-redis/redis/v8"
@@ -17,10 +16,8 @@ type client struct {
 	redisZSet
 	redisLock
 	redisPub
+	original *redis.Client
 }
-
-// 上下文定义
-var ctx = context.Background()
 
 // newClient 初始化
 func newClient(redisConfig redisConfig) IClient {
@@ -34,6 +31,7 @@ func newClient(redisConfig redisConfig) IClient {
 	})
 
 	return &client{
+		original:    rdb,
 		redisKey:    redisKey{rdb: rdb},
 		redisString: redisString{rdb: rdb},
 		redisHash:   redisHash{rdb: rdb},
@@ -55,4 +53,9 @@ func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc
 	}, eventName)
 
 	go subscribe(receiver, eventName, fns)
+}
+
+// Original 获取原生的客户端
+func (receiver *client) Original() *redis.Client {
+	return receiver.original
 }

@@ -9,6 +9,8 @@ import (
 )
 
 type IClient interface {
+	// Original 获取原生的客户端
+	Original() *redis.Client
 	// RegisterEvent 注册core.IEvent实现
 	RegisterEvent(eventName string, fns ...core.ConsumerFunc)
 
