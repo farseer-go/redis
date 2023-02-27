@@ -4,6 +4,7 @@ import (
 	"github.com/farseer-go/cache"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
+	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/modules"
 )
@@ -32,6 +33,9 @@ func (module Module) Initialize() {
 		container.Register(func() IClient {
 			return newClient(config)
 		}, name)
+
+		// 注册健康检查
+		container.RegisterInstance[core.IHealthCheck](&healthCheck{name: name}, "redis_"+name)
 	}
 }
 
