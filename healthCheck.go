@@ -11,5 +11,5 @@ type healthCheck struct {
 
 func (c *healthCheck) Check() (string, error) {
 	_, err := container.Resolve[IClient](c.name).Original().Time(fs.Context).Result()
-	return "Redis " + c.name, err
+	return "Redis." + c.name, err
 }
