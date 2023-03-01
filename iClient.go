@@ -120,10 +120,14 @@ type IClient interface {
 	ZSetRangeByScore(key string, opt *redisZRangeBy) ([]string, error)
 
 	// LockNew 获得一个锁
-	LockNew(key string, expiration time.Duration) core.ILock
+	LockNew(key, val string, expiration time.Duration) core.ILock
 
 	// Publish 发布消息
 	Publish(channel string, message any) (int64, error)
 	// Subscribe 订阅消息
 	Subscribe(channels ...string) <-chan *redis.Message
+	// Election 选举
+	Election(key string, fn func())
+	// GetLeaderId 获取当前LeaderId
+	GetLeaderId(key string) int64
 }

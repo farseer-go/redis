@@ -15,25 +15,26 @@ type redisLock struct {
 }
 
 type lockResult struct {
-	key        string
+	key        string // 锁名称
+	val        string // 锁值
 	expiration time.Duration
 	rdb        *redis.Client
 }
 
-func (r redisLock) LockNew(key string, expiration time.Duration) core.ILock {
+// LockNew 创建锁
+func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock {
 	return &lockResult{
 		rdb:        r.rdb,
 		key:        key,
+		val:        val,
 		expiration: expiration,
 	}
 }
 
 // TryLock 尝试加锁
 func (r *lockResult) TryLock() bool {
-	sw := stopwatch.StartNew()
-	cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
+	cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
 	result, err := cmd.Result()
-	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
@@ -43,7 +44,7 @@ func (r *lockResult) TryLock() bool {
 // TryLockRun 尝试加锁，执行完后，自动释放锁
 func (r *lockResult) TryLockRun(fn func()) bool {
 	sw := stopwatch.StartNew()
-	cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
+	cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
 	result, err := cmd.Result()
 	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
@@ -58,11 +59,9 @@ func (r *lockResult) TryLockRun(fn func()) bool {
 
 // GetLock 获取锁，直到获取成功
 func (r *lockResult) GetLock() {
-	sw := stopwatch.StartNew()
 	for {
-		cmd := r.rdb.SetNX(fs.Context, r.key, 1, r.expiration)
+		cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
 		result, err := cmd.Result()
-		flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 		if err != nil {
 			_ = flog.Errorf("redis加锁异常：%s", err.Error())
 		}

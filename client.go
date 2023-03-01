@@ -16,6 +16,7 @@ type client struct {
 	redisZSet
 	redisLock
 	redisPub
+	redisElection
 	original *redis.Client
 }
 
@@ -40,6 +41,7 @@ func newClient(redisConfig redisConfig) IClient {
 		redisZSet:   redisZSet{rdb: rdb},
 		redisLock:   redisLock{rdb: rdb},
 		redisPub:    redisPub{rdb: rdb},
+		redisElection:    redisElection{rdb: rdb},
 	}
 }
 
