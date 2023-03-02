@@ -16,7 +16,7 @@ type redisElection struct {
 // 未拿到master，会持续尝试获取master
 func (receiver *redisElection) Election(key string, fn func()) {
 	for {
-		cmd := receiver.rdb.SetNX(fs.Context, key, fs.AppId, 5*time.Second)
+		cmd := receiver.rdb.SetNX(fs.Context, key, fs.AppId, 20*time.Second)
 		result, _ := cmd.Result()
 		// 拿到锁了
 		if result {
@@ -42,7 +42,7 @@ func (receiver *redisElection) GetLeaderId(key string) int64 {
 // 续约
 func (receiver *redisElection) leaseRenewal(key string) {
 	for {
-		<-time.After(4 * time.Second)
-		_, _ = receiver.rdb.Expire(fs.Context, key, 5*time.Second).Result()
+		<-time.After(10 * time.Second)
+		_, _ = receiver.rdb.Expire(fs.Context, key, 20*time.Second).Result()
 	}
 }
