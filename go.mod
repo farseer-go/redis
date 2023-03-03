@@ -3,7 +3,7 @@ module github.com/farseer-go/redis
 go 1.19
 
 require (
-	github.com/farseer-go/cache v0.1.2-0.20230210104343-1eadcbb0c3be
+	github.com/farseer-go/cache v0.2.0
 	github.com/farseer-go/collections v0.4.0
 	github.com/farseer-go/fs v0.7.0
 	github.com/go-redis/redis/v8 v8.11.5
