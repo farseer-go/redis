@@ -24,7 +24,7 @@ func Test_lockResult_Lock(t *testing.T) {
 
 func control01(t *testing.T, client redis.IClient) {
 	sw := stopwatch.StartNew()
-	local := client.LockNew("key_local", 2*time.Second)
+	local := client.LockNew("key_local", "", 2*time.Second)
 	defer local.ReleaseLock()
 	defer func() {
 		flog.Infof("LockNew，耗时：%s", sw.GetMillisecondsText())
