@@ -5,6 +5,7 @@ import (
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
 	"reflect"
@@ -94,4 +95,22 @@ func (redisHash *redisHash) HashCount(key string) int {
 	hLen := redisHash.rdb.HLen(fs.Context, key)
 	count, _ := hLen.Uint64()
 	return int(count)
+}
+
+func (redisHash *redisHash) HashIncrInt(key string, field string, value int) (int, error) {
+	val, err := redisHash.rdb.HIncrBy(fs.Context, key, field, parse.Convert(value, int64(value))).Result()
+	return parse.Convert(val, 0), err
+}
+
+func (redisHash *redisHash) HashIncrInt64(key string, field string, value int64) (int64, error) {
+	return redisHash.rdb.HIncrBy(fs.Context, key, field, value).Result()
+}
+
+func (redisHash *redisHash) HashIncrFloat32(key string, field string, value float32) (float32, error) {
+	val, err := redisHash.rdb.HIncrByFloat(fs.Context, key, field, float64(value)).Result()
+	return parse.Convert(val, float32(0)), err
+}
+
+func (redisHash *redisHash) HashIncrFloat64(key string, field string, value float64) (float64, error) {
+	return redisHash.rdb.HIncrByFloat(fs.Context, key, field, value).Result()
 }

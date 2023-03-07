@@ -61,6 +61,15 @@ type IClient interface {
 	// HashCount 获取hash的数量
 	HashCount(key string) int
 
+	// HashIncrInt Hash对int加减
+	HashIncrInt(key string, field string, value int) (int, error)
+	// HashIncrInt64 Hash对int64加减
+	HashIncrInt64(key string, field string, value int64) (int64, error)
+	// HashIncrFloat32 Hash对float32加减
+	HashIncrFloat32(key string, field string, value float32) (float32, error)
+	// HashIncrFloat64 Hash对float64加减
+	HashIncrFloat64(key string, field string, value float64) (float64, error)
+
 	// ListPushRight 向末层推送数据
 	ListPushRight(key string, values ...any) (bool, error)
 	// ListPushLeft 向头部推送数据
