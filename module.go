@@ -38,9 +38,3 @@ func (module Module) Initialize() {
 		container.RegisterInstance[core.IHealthCheck](&healthCheck{name: name}, "redis_"+name)
 	}
 }
-
-func (module Module) PostInitialize() {
-}
-
-func (module Module) Shutdown() {
-}
