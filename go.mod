@@ -7,7 +7,7 @@ require (
 	github.com/farseer-go/collections v0.4.0
 	github.com/farseer-go/fs v0.7.0
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
 
 require (
