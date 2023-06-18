@@ -72,6 +72,8 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 	if err != nil {
 		_ = flog.Error(err)
 	}
+
+	// 设置缓存失效时间
 	if r.expiry > 0 {
 		_, _ = r.redisClient.SetTTL(r.key, r.expiry)
 	}
