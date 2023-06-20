@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/farseer-go/cache"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/redis"
@@ -14,13 +15,16 @@ type po struct {
 	Age  int
 }
 
-func TestCacheInRedis_Set(t *testing.T) {
+func init() {
 	fs.Initialize[redis.Module]("unit test")
+}
+
+func TestCacheInRedis_Set(t *testing.T) {
 	assert.Panics(t, func() {
-		redis.SetProfiles[po]("test", "ClientName", 0, "default")
+		redis.SetProfiles[po]("TestCacheInRedis_Set", "ClientName", "default")
 	})
 
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Set", "Name", "default")
 	lst := collections.NewList(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Set(lst.ToArray()...)
 
@@ -40,9 +44,7 @@ func TestCacheInRedis_Set(t *testing.T) {
 }
 
 func TestCacheInRedis_GetItem(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_GetItem", "Name", "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	item1, _ := cacheManage.GetItem("steden")
 
@@ -56,9 +58,7 @@ func TestCacheInRedis_GetItem(t *testing.T) {
 }
 
 func TestCacheInRedis_SaveItem(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_SaveItem", "Name", "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.SaveItem(po{Name: "steden", Age: 99})
 	item1, _ := cacheManage.GetItem("steden")
@@ -73,9 +73,7 @@ func TestCacheInRedis_SaveItem(t *testing.T) {
 }
 
 func TestCacheInRedis_Remove(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Remove", "Name", "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Remove("steden")
 
@@ -88,9 +86,7 @@ func TestCacheInRedis_Remove(t *testing.T) {
 }
 
 func TestCacheInRedis_Clear(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Clear", "Name", "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	assert.Equal(t, cacheManage.Count(), 2)
 	cacheManage.Clear()
@@ -98,18 +94,16 @@ func TestCacheInRedis_Clear(t *testing.T) {
 }
 
 func TestCacheInRedis_Exists(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 0, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Exists", "Name", "default")
 	assert.False(t, cacheManage.ExistsKey())
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	assert.True(t, cacheManage.ExistsKey())
 }
 
 func TestCacheInRedis_Ttl(t *testing.T) {
-	fs.Initialize[redis.Module]("unit test")
-
-	cacheManage := redis.SetProfiles[po]("test", "Name", 1*time.Second, "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Ttl", "Name", "default", func(op *cache.Op) {
+		op.Expiry = 1 * time.Second
+	})
 	lst := collections.NewList(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	cacheManage.Set(lst.ToArray()...)
 	lst2 := cacheManage.Get()

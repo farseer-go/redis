@@ -10,7 +10,6 @@ import (
 )
 
 func Test_redisList(t *testing.T) {
-
 	//client := newClient("default")
 	//defer func() {
 	//	_, _ = client.Del("key_list")
