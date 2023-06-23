@@ -20,7 +20,8 @@ type cacheInRedis struct {
 	itemType    reflect.Type       // itemType
 	key         string             // 缓存KEY
 	lastVisitAt time.Time          // 最后一次访问时间
-	redisClient IClient
+	unSetTTl    bool               // 绝对时间策略时，标记是否设置过过期时间
+	redisClient IClient            // redis client
 }
 
 // 创建实例
@@ -40,10 +41,10 @@ func newCache(key string, uniqueField string, itemType reflect.Type, redisConfig
 		lastVisitAt: time.Now(),
 	}
 
-	if r.expiry > 0 && r.expiryType == eumExpiryType.SlidingExpiration {
+	if r.expiry > 0 {
 		go r.updateTtl()
 	}
-	
+
 	return r
 }
 
@@ -96,7 +97,7 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 
 	// 设置缓存失效时间
 	if r.expiry > 0 {
-		_, _ = r.redisClient.SetTTL(r.key, r.expiry)
+		r.setTTL()
 	}
 }
 
@@ -106,6 +107,11 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 	err := r.redisClient.HashSetEntity(r.key, newValDataKey, newVal)
 	if err != nil {
 		_ = flog.Error(err)
+	}
+
+	// 如果直接调用SaveItem方法，会导致绝对时间策略的情况下，没有设置TTL。
+	if r.expiry > 0 && r.expiryType == eumExpiryType.AbsoluteExpiration && !r.unSetTTl {
+		r.setTTL()
 	}
 }
 
@@ -172,10 +178,17 @@ func (r *cacheInRedis) updateTtl() {
 
 	ticker := time.NewTicker(expiry)
 	for range ticker.C {
-		if !r.lastVisitAt.IsZero() {
-			// 重新计算下一次的失效时间
-			r.lastVisitAt = time.Time{}
-			_, _ = r.redisClient.SetTTL(r.key, r.expiry)
+		// 绝对时间的情况下，这时redis已自动过期了，所以需要将状态重新标记为：未设置状态
+		if r.expiryType == eumExpiryType.SlidingExpiration {
+			r.unSetTTl = false
+		} else if r.expiryType == eumExpiryType.SlidingExpiration && !r.lastVisitAt.IsZero() {
+			r.setTTL()
 		}
 	}
+}
+
+func (r *cacheInRedis) setTTL() {
+	r.lastVisitAt = time.Time{}
+	r.unSetTTl = true
+	_, _ = r.redisClient.SetTTL(r.key, r.expiry)
 }

@@ -94,7 +94,9 @@ func TestCacheInRedis_Clear(t *testing.T) {
 }
 
 func TestCacheInRedis_Exists(t *testing.T) {
-	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Exists", "Name", "default")
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_Exists", "Name", "default", func(op *cache.Op) {
+		op.Expiry = 10 * time.Millisecond
+	})
 	assert.False(t, cacheManage.ExistsKey())
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
 	assert.True(t, cacheManage.ExistsKey())
