@@ -52,9 +52,7 @@ func (r *cacheInRedis) Get() collections.ListAny {
 	r.updateExpiry()
 	// 从redis hash中读取到slice
 	lst, err := r.redisClient.HashToListAny(r.key, r.itemType)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 
 	return lst
 }
@@ -65,9 +63,7 @@ func (r *cacheInRedis) GetItem(cacheId any) any {
 
 	// hash get
 	exists, err := r.redisClient.HashToEntity(r.key, parse.Convert(cacheId, ""), entityPtr)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 	if !exists {
 		return nil
 	}
@@ -91,9 +87,7 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 	}
 
 	err := r.redisClient.HashSet(r.key, values)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 
 	// 设置缓存失效时间
 	if r.expiry > 0 {
@@ -105,9 +99,7 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 	r.updateExpiry()
 	newValDataKey := r.GetUniqueId(newVal)
 	err := r.redisClient.HashSetEntity(r.key, newValDataKey, newVal)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 
 	// 如果直接调用SaveItem方法，会导致绝对时间策略的情况下，没有设置TTL。
 	if r.expiry > 0 && r.expiryType == eumExpiryType.AbsoluteExpiration && !r.unSetTTl {
@@ -117,16 +109,12 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 
 func (r *cacheInRedis) Remove(cacheId any) {
 	_, err := r.redisClient.HashDel(r.key, parse.Convert(cacheId, ""))
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 }
 
 func (r *cacheInRedis) Clear() {
 	_, err := r.redisClient.Del(r.key)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 }
 
 func (r *cacheInRedis) Count() int {
@@ -137,18 +125,14 @@ func (r *cacheInRedis) Count() int {
 func (r *cacheInRedis) ExistsItem(cacheId any) bool {
 	r.updateExpiry()
 	exists, err := r.redisClient.HashExists(r.key, parse.Convert(cacheId, ""))
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 	return exists
 }
 
 func (r *cacheInRedis) ExistsKey() bool {
 	r.updateExpiry()
 	exists, err := r.redisClient.Exists(r.key)
-	if err != nil {
-		_ = flog.Error(err)
-	}
+	flog.ErrorIfExists(err)
 	return exists
 }
 
