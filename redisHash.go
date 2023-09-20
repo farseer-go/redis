@@ -16,7 +16,10 @@ type redisHash struct {
 }
 
 func (redisHash *redisHash) HashSetEntity(key string, field string, entity any) error {
-	jsonContent, _ := json.Marshal(entity)
+	jsonContent, err := json.Marshal(entity)
+	if err != nil {
+		return err
+	}
 	return redisHash.rdb.HSet(fs.Context, key, field, string(jsonContent)).Err()
 }
 
