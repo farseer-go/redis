@@ -23,18 +23,23 @@ func (module Module) PreInitialize() {
 func (module Module) Initialize() {
 	redisConfigs := configure.GetSubNodes("Redis")
 	for name, configString := range redisConfigs {
-		config := configure.ParseString[redisConfig](configString.(string))
-		if config.Server == "" {
-			_ = flog.Error("Redis配置缺少Server节点")
-			continue
-		}
-
-		// 注册实例
-		container.Register(func() IClient {
-			return newClient(config)
-		}, name)
-
-		// 注册健康检查
-		container.RegisterInstance[core.IHealthCheck](&healthCheck{name: name}, "redis_"+name)
+		Register(name, configString)
 	}
+}
+
+// Register 注册Redis实例
+func Register(name string, configString any) {
+	config := configure.ParseString[redisConfig](configString.(string))
+	if config.Server == "" {
+		_ = flog.Error("Redis配置缺少Server节点")
+		return
+	}
+
+	// 注册实例
+	container.Register(func() IClient {
+		return newClient(config)
+	}, name)
+
+	// 注册健康检查
+	container.RegisterInstance[core.IHealthCheck](&healthCheck{name: name}, "redis_"+name)
 }
