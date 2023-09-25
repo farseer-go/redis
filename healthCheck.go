@@ -17,5 +17,4 @@ func (c *healthCheck) Check() (string, error) {
 	flog.ErrorIfExists(err)
 
 	return fmt.Sprintf("Redis.%s => %s", c.name, t.Format(time.DateTime)), err
-	return "Redis." + c.name, err
 }
