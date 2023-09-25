@@ -1,9 +1,11 @@
 package redis
 
 import (
+	"fmt"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/flog"
+	"time"
 )
 
 type healthCheck struct {
@@ -11,7 +13,9 @@ type healthCheck struct {
 }
 
 func (c *healthCheck) Check() (string, error) {
-	_, err := container.Resolve[IClient](c.name).Original().Time(fs.Context).Result()
+	t, err := container.Resolve[IClient](c.name).Original().Time(fs.Context).Result()
 	flog.ErrorIfExists(err)
+
+	return fmt.Sprintf("Redis.%s => %s", c.name, t.Format(time.DateTime)), err
 	return "Redis." + c.name, err
 }
