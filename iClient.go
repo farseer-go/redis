@@ -27,7 +27,7 @@ type IClient interface {
 	StringSet(key string, value any) error
 	// StringGet 获取缓存
 	StringGet(key string) (string, error)
-	// StringSetNX 设置过期时间
+	// StringSetNX 设置过期时间（如果KEY存在，则会更新失败）
 	StringSetNX(key string, value any, expiration time.Duration) (bool, error)
 
 	// HashSetEntity 添加并序列化成json
