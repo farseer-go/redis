@@ -7,8 +7,10 @@ import (
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/types"
+	"github.com/farseer-go/linkTrace"
 	"github.com/go-redis/redis/v8"
 	"reflect"
+	"strings"
 )
 
 type redisHash struct {
@@ -16,31 +18,57 @@ type redisHash struct {
 }
 
 func (redisHash *redisHash) HashSetEntity(key string, field string, entity any) error {
+	trace := linkTrace.TraceRedis("HashSetEntity", key, field)
 	jsonContent, err := json.Marshal(entity)
+	defer func() { trace.End(err) }()
+
 	if err != nil {
 		return err
 	}
-	return redisHash.rdb.HSet(fs.Context, key, field, string(jsonContent)).Err()
+
+	err = redisHash.rdb.HSet(fs.Context, key, field, string(jsonContent)).Err()
+	return err
 }
 
 func (redisHash *redisHash) HashSet(key string, fieldValues ...any) error {
-	return redisHash.rdb.HSet(fs.Context, key, fieldValues...).Err()
+	var fields []string
+	for i := 0; i < len(fieldValues); i += 2 {
+		fields = append(fields, parse.ToString(fieldValues[i]))
+	}
+
+	trace := linkTrace.TraceRedis("HashSet", key, strings.Join(fields, ","))
+	err := redisHash.rdb.HSet(fs.Context, key, fieldValues...).Err()
+	defer func() { trace.End(err) }()
+	return err
 }
 
 func (redisHash *redisHash) HashGet(key string, field string) (string, error) {
-	return redisHash.rdb.HGet(fs.Context, key, field).Result()
+	trace := linkTrace.TraceRedis("HashGet", key, field)
+
+	result, err := redisHash.rdb.HGet(fs.Context, key, field).Result()
+	defer func() { trace.End(err) }()
+	return result, err
 }
 
 func (redisHash *redisHash) HashGetAll(key string) (map[string]string, error) {
-	return redisHash.rdb.HGetAll(fs.Context, key).Result()
+	trace := linkTrace.TraceRedis("HashGetAll", key, "")
+
+	result, err := redisHash.rdb.HGetAll(fs.Context, key).Result()
+	defer func() { trace.End(err) }()
+	return result, err
 }
 
 func (redisHash *redisHash) HashToEntity(key string, field string, entity any) (bool, error) {
+	trace := linkTrace.TraceRedis("HashToEntity", key, field)
+
 	jsonContent, err := redisHash.rdb.HGet(fs.Context, key, field).Result()
+	defer func() { trace.End(err) }()
+	if err == redis.Nil {
+		err = nil
+		return false, err
+	}
+
 	if err != nil {
-		if err == redis.Nil {
-			return false, nil
-		}
 		return false, err
 	}
 	// 反序列
@@ -48,6 +76,7 @@ func (redisHash *redisHash) HashToEntity(key string, field string, entity any) (
 }
 
 func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
+	trace := linkTrace.TraceRedis("HashToArray", key, "")
 	arrVal := reflect.ValueOf(arrSlice).Elem()
 	arrType, isSlice := types.IsSlice(arrVal)
 	if !isSlice {
@@ -55,6 +84,7 @@ func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
 	}
 
 	result, err := redisHash.rdb.HGetAll(fs.Context, key).Result()
+	defer func() { trace.End(err) }()
 	if err != nil {
 		return flog.Error(err)
 	}
@@ -71,8 +101,11 @@ func (redisHash *redisHash) HashToArray(key string, arrSlice any) error {
 }
 
 func (redisHash *redisHash) HashToListAny(key string, itemType reflect.Type) (collections.ListAny, error) {
+	trace := linkTrace.TraceRedis("HashToListAny", key, "")
+
 	lst := collections.NewListAny()
 	result, err := redisHash.rdb.HGetAll(fs.Context, key).Result()
+	defer func() { trace.End(err) }()
 	if err != nil {
 		_ = flog.Error(err)
 		return lst, err
@@ -86,34 +119,57 @@ func (redisHash *redisHash) HashToListAny(key string, itemType reflect.Type) (co
 }
 
 func (redisHash *redisHash) HashExists(key string, field string) (bool, error) {
-	return redisHash.rdb.HExists(fs.Context, key, field).Result()
+	trace := linkTrace.TraceRedis("HashExists", key, field)
+
+	result, err := redisHash.rdb.HExists(fs.Context, key, field).Result()
+	defer func() { trace.End(err) }()
+	return result, err
 }
 
 func (redisHash *redisHash) HashDel(key string, fields ...string) (bool, error) {
+	trace := linkTrace.TraceRedis("HashDel", key, strings.Join(fields, ","))
+
 	result, err := redisHash.rdb.HDel(fs.Context, key, fields...).Result()
+	defer func() { trace.End(err) }()
 	return result > 0, err
 }
 
 func (redisHash *redisHash) HashCount(key string) int {
-	hLen := redisHash.rdb.HLen(fs.Context, key)
-	count, _ := hLen.Uint64()
-	return int(count)
+	trace := linkTrace.TraceRedis("HashCount", key, "")
+
+	result, err := redisHash.rdb.HLen(fs.Context, key).Uint64()
+	defer func() { trace.End(err) }()
+	return int(result)
 }
 
 func (redisHash *redisHash) HashIncrInt(key string, field string, value int) (int, error) {
-	val, err := redisHash.rdb.HIncrBy(fs.Context, key, field, parse.Convert(value, int64(value))).Result()
-	return parse.Convert(val, 0), err
+	trace := linkTrace.TraceRedis("HashIncrInt", key, field)
+
+	result, err := redisHash.rdb.HIncrBy(fs.Context, key, field, parse.Convert(value, int64(value))).Result()
+	defer func() { trace.End(err) }()
+	return parse.ToInt(result), err
 }
 
 func (redisHash *redisHash) HashIncrInt64(key string, field string, value int64) (int64, error) {
-	return redisHash.rdb.HIncrBy(fs.Context, key, field, value).Result()
+	trace := linkTrace.TraceRedis("HashIncrInt64", key, field)
+
+	result, err := redisHash.rdb.HIncrBy(fs.Context, key, field, value).Result()
+	defer func() { trace.End(err) }()
+	return result, err
 }
 
 func (redisHash *redisHash) HashIncrFloat32(key string, field string, value float32) (float32, error) {
-	val, err := redisHash.rdb.HIncrByFloat(fs.Context, key, field, float64(value)).Result()
-	return parse.Convert(val, float32(0)), err
+	trace := linkTrace.TraceRedis("HashIncrFloat32", key, field)
+
+	result, err := redisHash.rdb.HIncrByFloat(fs.Context, key, field, float64(value)).Result()
+	defer func() { trace.End(err) }()
+	return parse.ToFloat32(result), err
 }
 
 func (redisHash *redisHash) HashIncrFloat64(key string, field string, value float64) (float64, error) {
-	return redisHash.rdb.HIncrByFloat(fs.Context, key, field, value).Result()
+	trace := linkTrace.TraceRedis("HashIncrFloat64", key, field)
+
+	result, err := redisHash.rdb.HIncrByFloat(fs.Context, key, field, value).Result()
+	defer func() { trace.End(err) }()
+	return result, err
 }

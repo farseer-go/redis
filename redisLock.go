@@ -5,6 +5,7 @@ import (
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/stopwatch"
+	"github.com/farseer-go/linkTrace"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -33,8 +34,10 @@ func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock
 
 // TryLock 尝试加锁
 func (r *lockResult) TryLock() bool {
-	cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
-	result, err := cmd.Result()
+	trace := linkTrace.TraceRedis("TryLock", r.key, "")
+
+	result, err := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration).Result()
+	defer func() { trace.End(err) }()
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
@@ -43,9 +46,11 @@ func (r *lockResult) TryLock() bool {
 
 // TryLockRun 尝试加锁，执行完后，自动释放锁
 func (r *lockResult) TryLockRun(fn func()) bool {
+	trace := linkTrace.TraceRedis("TryLockRun", r.key, "")
+
 	sw := stopwatch.StartNew()
-	cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
-	result, err := cmd.Result()
+	result, err := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration).Result()
+	defer func() { trace.End(err) }()
 	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
@@ -59,9 +64,14 @@ func (r *lockResult) TryLockRun(fn func()) bool {
 
 // GetLock 获取锁，直到获取成功
 func (r *lockResult) GetLock() {
+	trace := linkTrace.TraceRedis("GetLock", r.key, "")
+	var err error
+	defer func() { trace.End(err) }()
+
 	for {
-		cmd := r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration)
-		result, err := cmd.Result()
+		var result bool
+		result, err = r.rdb.SetNX(fs.Context, r.key, r.val, r.expiration).Result()
+
 		if err != nil {
 			_ = flog.Errorf("redis加锁异常：%s", err.Error())
 		}
@@ -84,5 +94,8 @@ func (r *lockResult) GetLockRun(fn func()) {
 
 // ReleaseLock 锁放锁
 func (r *lockResult) ReleaseLock() {
-	r.rdb.Del(fs.Context, r.key)
+	trace := linkTrace.TraceRedis("ReleaseLock", r.key, "")
+	_, err := r.rdb.Del(fs.Context, r.key).Result()
+	defer func() { trace.End(err) }()
+
 }

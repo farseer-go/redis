@@ -5,6 +5,7 @@ import (
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/snowflake"
+	"github.com/farseer-go/linkTrace"
 	"strconv"
 	"time"
 )
@@ -15,6 +16,7 @@ type registerEvent struct {
 }
 
 func (c *registerEvent) Publish(message any) error {
+	trace := linkTrace.TraceRedis("Publish", c.eventName, "")
 	var jsonContent string
 	switch message.(type) {
 	case string:
@@ -24,6 +26,7 @@ func (c *registerEvent) Publish(message any) error {
 		jsonContent = string(b)
 	}
 	_, err := c.client.Publish(c.eventName, jsonContent)
+	defer func() { trace.End(err) }()
 	return err
 }
 
