@@ -139,4 +139,9 @@ type IClient interface {
 	Election(key string, fn func())
 	// GetLeaderId 获取当前LeaderId
 	GetLeaderId(key string) int64
+
+	// Transaction 开启事务
+	Transaction(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error)
+	// Pipeline 开启管道
+	Pipeline(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error)
 }

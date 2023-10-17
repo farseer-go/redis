@@ -17,6 +17,7 @@ type client struct {
 	redisLock
 	redisPub
 	redisElection
+	redisPipeline
 	original *redis.Client
 }
 
@@ -32,16 +33,17 @@ func newClient(redisConfig redisConfig) IClient {
 	})
 
 	return &client{
-		original:    rdb,
-		redisKey:    redisKey{rdb: rdb},
-		redisString: redisString{rdb: rdb},
-		redisHash:   redisHash{rdb: rdb},
-		redisList:   redisList{rdb: rdb},
-		redisSet:    redisSet{rdb: rdb},
-		redisZSet:   redisZSet{rdb: rdb},
-		redisLock:   redisLock{rdb: rdb},
-		redisPub:    redisPub{rdb: rdb},
-		redisElection:    redisElection{rdb: rdb},
+		original:      rdb,
+		redisKey:      redisKey{rdb: rdb},
+		redisString:   redisString{rdb: rdb},
+		redisHash:     redisHash{rdb: rdb},
+		redisList:     redisList{rdb: rdb},
+		redisSet:      redisSet{rdb: rdb},
+		redisZSet:     redisZSet{rdb: rdb},
+		redisLock:     redisLock{rdb: rdb},
+		redisPub:      redisPub{rdb: rdb},
+		redisElection: redisElection{rdb: rdb},
+		redisPipeline: redisPipeline{rdb: rdb},
 	}
 }
 
