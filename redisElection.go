@@ -3,13 +3,15 @@ package redis
 import (
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
 
 // 选举
 type redisElection struct {
-	rdb *redis.Client
+	rdb          *redis.Client
+	traceManager trace.IManager
 }
 
 // Election 选举成功后，会自动续约。
@@ -35,7 +37,9 @@ func (receiver *redisElection) Election(key string, fn func()) {
 
 // GetLeaderId 获取当前LeaderId
 func (receiver *redisElection) GetLeaderId(key string) int64 {
-	result, _ := receiver.rdb.Get(fs.Context, key).Result()
+	traceDetail := receiver.traceManager.TraceRedis("GetLeaderId", key, "")
+	result, err := receiver.rdb.Get(fs.Context, key).Result()
+	defer func() { traceDetail.End(err) }()
 	return parse.Convert(result, int64(0))
 }
 

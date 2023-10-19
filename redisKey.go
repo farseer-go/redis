@@ -2,44 +2,45 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
-	"github.com/farseer-go/linkTrace"
+	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
 )
 
 type redisKey struct {
-	rdb *redis.Client
+	rdb          *redis.Client
+	traceManager trace.IManager
 }
 
-func (redisKey *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
-	trace := linkTrace.TraceRedis("SetTTL", key, "")
+func (receiver *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("SetTTL", key, "")
 
-	result, err := redisKey.rdb.Expire(fs.Context, key, d).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.Expire(fs.Context, key, d).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisKey *redisKey) TTL(key string) (time.Duration, error) {
-	trace := linkTrace.TraceRedis("TTL", key, "")
+func (receiver *redisKey) TTL(key string) (time.Duration, error) {
+	traceDetail := receiver.traceManager.TraceRedis("TTL", key, "")
 
-	result, err := redisKey.rdb.TTL(fs.Context, key).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.TTL(fs.Context, key).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisKey *redisKey) Del(keys ...string) (bool, error) {
-	trace := linkTrace.TraceRedis("Del", strings.Join(keys, ","), "")
+func (receiver *redisKey) Del(keys ...string) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("Del", strings.Join(keys, ","), "")
 
-	result, err := redisKey.rdb.Del(fs.Context, keys...).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.Del(fs.Context, keys...).Result()
+	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }
 
-func (redisKey *redisKey) Exists(keys ...string) (bool, error) {
-	trace := linkTrace.TraceRedis("Exists", strings.Join(keys, ","), "")
+func (receiver *redisKey) Exists(keys ...string) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("Exists", strings.Join(keys, ","), "")
 
-	result, err := redisKey.rdb.Exists(fs.Context, keys...).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.Exists(fs.Context, keys...).Result()
+	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }

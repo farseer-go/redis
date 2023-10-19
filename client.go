@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
+	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -32,18 +33,19 @@ func newClient(redisConfig redisConfig) IClient {
 		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout) * time.Millisecond, //响应超时时间设置
 	})
 
+	traceManager := container.Resolve[trace.IManager]()
 	return &client{
 		original:      rdb,
-		redisKey:      redisKey{rdb: rdb},
-		redisString:   redisString{rdb: rdb},
-		redisHash:     redisHash{rdb: rdb},
-		redisList:     redisList{rdb: rdb},
-		redisSet:      redisSet{rdb: rdb},
-		redisZSet:     redisZSet{rdb: rdb},
-		redisLock:     redisLock{rdb: rdb},
-		redisPub:      redisPub{rdb: rdb},
-		redisElection: redisElection{rdb: rdb},
-		redisPipeline: redisPipeline{rdb: rdb},
+		redisKey:      redisKey{rdb: rdb, traceManager: traceManager},
+		redisString:   redisString{rdb: rdb, traceManager: traceManager},
+		redisHash:     redisHash{rdb: rdb, traceManager: traceManager},
+		redisList:     redisList{rdb: rdb, traceManager: traceManager},
+		redisSet:      redisSet{rdb: rdb, traceManager: traceManager},
+		redisZSet:     redisZSet{rdb: rdb, traceManager: traceManager},
+		redisLock:     redisLock{rdb: rdb, traceManager: traceManager},
+		redisPub:      redisPub{rdb: rdb, traceManager: traceManager},
+		redisElection: redisElection{rdb: rdb, traceManager: traceManager},
+		redisPipeline: redisPipeline{rdb: rdb, traceManager: traceManager},
 	}
 }
 

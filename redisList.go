@@ -2,87 +2,88 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
-	"github.com/farseer-go/linkTrace"
+	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
 )
 
 type redisList struct {
-	rdb *redis.Client
+	rdb          *redis.Client
+	traceManager trace.IManager
 }
 
-func (redisList *redisList) ListPushRight(key string, values ...any) (bool, error) {
-	trace := linkTrace.TraceRedis("ListPushRight", key, "")
+func (receiver *redisList) ListPushRight(key string, values ...any) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListPushRight", key, "")
 
-	result, err := redisList.rdb.RPush(fs.Context, key, values).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.RPush(fs.Context, key, values).Result()
+	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }
 
-func (redisList *redisList) ListPushLeft(key string, values ...any) (bool, error) {
-	trace := linkTrace.TraceRedis("ListPushLeft", key, "")
+func (receiver *redisList) ListPushLeft(key string, values ...any) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListPushLeft", key, "")
 
-	result, err := redisList.rdb.LPush(fs.Context, key, values).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.LPush(fs.Context, key, values).Result()
+	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }
 
-func (redisList *redisList) ListSet(key string, index int64, value any) (bool, error) {
-	trace := linkTrace.TraceRedis("ListSet", key, "")
+func (receiver *redisList) ListSet(key string, index int64, value any) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListSet", key, "")
 
-	result, err := redisList.rdb.LSet(fs.Context, key, index, value).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.LSet(fs.Context, key, index, value).Result()
+	defer func() { traceDetail.End(err) }()
 	if result == "OK" {
 		return true, err
 	}
 	return false, err
 }
 
-func (redisList *redisList) ListRemove(key string, count int64, value any) (bool, error) {
-	trace := linkTrace.TraceRedis("ListRemove", key, "")
+func (receiver *redisList) ListRemove(key string, count int64, value any) (bool, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListRemove", key, "")
 
-	result, err := redisList.rdb.LRem(fs.Context, key, count, value).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.LRem(fs.Context, key, count, value).Result()
+	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }
 
-func (redisList *redisList) ListCount(key string) (int64, error) {
-	trace := linkTrace.TraceRedis("ListCount", key, "")
+func (receiver *redisList) ListCount(key string) (int64, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListCount", key, "")
 
-	result, err := redisList.rdb.LLen(fs.Context, key).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.LLen(fs.Context, key).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisList *redisList) ListRange(key string, start int64, stop int64) ([]string, error) {
-	trace := linkTrace.TraceRedis("ListRange", key, "")
+func (receiver *redisList) ListRange(key string, start int64, stop int64) ([]string, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListRange", key, "")
 
-	result, err := redisList.rdb.LRange(fs.Context, key, start, stop).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.LRange(fs.Context, key, start, stop).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisList *redisList) ListLeftPop(timeout time.Duration, keys ...string) ([]string, error) {
-	trace := linkTrace.TraceRedis("ListLeftPop", strings.Join(keys, ","), "")
+func (receiver *redisList) ListLeftPop(timeout time.Duration, keys ...string) ([]string, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListLeftPop", strings.Join(keys, ","), "")
 
-	result, err := redisList.rdb.BLPop(fs.Context, timeout, keys...).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.BLPop(fs.Context, timeout, keys...).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisList *redisList) ListRightPop(timeout time.Duration, keys ...string) ([]string, error) {
-	trace := linkTrace.TraceRedis("ListRightPop", strings.Join(keys, ","), "")
+func (receiver *redisList) ListRightPop(timeout time.Duration, keys ...string) ([]string, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListRightPop", strings.Join(keys, ","), "")
 
-	result, err := redisList.rdb.BRPop(fs.Context, timeout, keys...).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.BRPop(fs.Context, timeout, keys...).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
 
-func (redisList *redisList) ListRightPopPush(source, destination string, timeout time.Duration) (string, error) {
-	trace := linkTrace.TraceRedis("ListRightPopPush", source, "")
+func (receiver *redisList) ListRightPopPush(source, destination string, timeout time.Duration) (string, error) {
+	traceDetail := receiver.traceManager.TraceRedis("ListRightPopPush", source, "")
 
-	result, err := redisList.rdb.BRPopLPush(fs.Context, source, destination, timeout).Result()
-	defer func() { trace.End(err) }()
+	result, err := receiver.rdb.BRPopLPush(fs.Context, source, destination, timeout).Result()
+	defer func() { traceDetail.End(err) }()
 	return result, err
 }
