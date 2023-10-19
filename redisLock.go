@@ -2,7 +2,6 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
-	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/stopwatch"
@@ -13,7 +12,8 @@ import (
 
 // 分布式锁
 type redisLock struct {
-	rdb *redis.Client
+	rdb          *redis.Client
+	traceManager trace.IManager
 }
 
 type lockResult struct {
@@ -31,7 +31,7 @@ func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock
 		key:          key,
 		val:          val,
 		expiration:   expiration,
-		traceManager: container.Resolve[trace.IManager](),
+		traceManager: r.traceManager,
 	}
 }
 
