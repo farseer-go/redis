@@ -53,8 +53,9 @@ func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc
 	// 注册仓储
 	container.Register(func() core.IEvent {
 		return &registerEvent{
-			eventName: eventName,
-			client:    receiver,
+			eventName:    eventName,
+			client:       receiver,
+			traceManager: container.Resolve[trace.IManager](),
 		}
 	}, eventName)
 
