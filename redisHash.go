@@ -45,6 +45,9 @@ func (receiver *redisHash) HashGet(key string, field string) (string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashGet", key, field)
 
 	result, err := receiver.GetClient().HGet(fs.Context, key, field).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -53,6 +56,9 @@ func (receiver *redisHash) HashGetAll(key string) (map[string]string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashGetAll", key, "")
 
 	result, err := receiver.GetClient().HGetAll(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -66,7 +72,6 @@ func (receiver *redisHash) HashToEntity(key string, field string, entity any) (b
 		err = nil
 		return false, err
 	}
-
 	if err != nil {
 		return false, err
 	}
@@ -83,6 +88,9 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 	}
 
 	result, err := receiver.GetClient().HGetAll(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	if err != nil {
 		return flog.Error(err)
@@ -104,6 +112,9 @@ func (receiver *redisHash) HashToListAny(key string, itemType reflect.Type) (col
 
 	lst := collections.NewListAny()
 	result, err := receiver.GetClient().HGetAll(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	if err != nil {
 		_ = flog.Error(err)
@@ -121,6 +132,9 @@ func (receiver *redisHash) HashExists(key string, field string) (bool, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashExists", key, field)
 
 	result, err := receiver.GetClient().HExists(fs.Context, key, field).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }

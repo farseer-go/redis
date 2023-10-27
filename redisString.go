@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
+	"github.com/go-redis/redis/v8"
 	"time"
 )
 
@@ -21,6 +22,9 @@ func (receiver *redisString) StringSet(key string, value any) error {
 func (receiver *redisString) StringGet(key string) (string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("StringGet", key, "")
 	result, err := receiver.GetClient().Get(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }

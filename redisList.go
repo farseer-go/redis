@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
+	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
 )
@@ -49,6 +50,9 @@ func (receiver *redisList) ListCount(key string) (int64, error) {
 	traceDetail := receiver.traceManager.TraceRedis("ListCount", key, "")
 
 	result, err := receiver.GetClient().LLen(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -57,6 +61,9 @@ func (receiver *redisList) ListRange(key string, start int64, stop int64) ([]str
 	traceDetail := receiver.traceManager.TraceRedis("ListRange", key, "")
 
 	result, err := receiver.GetClient().LRange(fs.Context, key, start, stop).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }

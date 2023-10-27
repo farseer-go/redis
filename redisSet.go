@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
+	"github.com/go-redis/redis/v8"
 	"strings"
 )
 
@@ -19,6 +20,9 @@ func (receiver *redisSet) SetAdd(key string, members ...any) (bool, error) {
 func (receiver *redisSet) SetCount(key string) (int64, error) {
 	traceDetail := receiver.traceManager.TraceRedis("SetCount", key, "")
 	result, err := receiver.GetClient().SCard(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -33,6 +37,9 @@ func (receiver *redisSet) SetRemove(key string, members ...any) (bool, error) {
 func (receiver *redisSet) SetGet(key string) ([]string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("SetGet", key, "")
 	result, err := receiver.GetClient().SMembers(fs.Context, key).Result()
+	if err == redis.Nil {
+		err = nil
+	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
