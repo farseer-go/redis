@@ -1,39 +1,35 @@
 package redis
 
-import (
-	"github.com/farseer-go/fs/trace"
-	"github.com/go-redis/redis/v8"
-)
+import "context"
 
 type redisPipeline struct {
-	rdb          *redis.Client
-	traceManager trace.IManager
+	*redisManager
 }
 
-func (receiver *redisPipeline) Transaction(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error) {
+func (receiver *redisPipeline) Transaction(executeFn func()) error {
 	var err error
 	traceDetail := receiver.traceManager.TraceRedis("TxPipeline", "", "")
 	defer func() { traceDetail.End(err) }()
 
 	// 开启事务
-	txPipeline := receiver.rdb.TxPipeline()
-	executeFn(txPipeline)
-	var exec []redis.Cmder
-	exec, err = txPipeline.Exec(nil)
+	txPipeline := receiver.GetClient().TxPipeline()
+	routineRedisClient.Set(txPipeline)
 
-	return exec, err
+	executeFn()
+	_, err = txPipeline.Exec(context.Background())
+	return err
 }
 
-func (receiver *redisPipeline) Pipeline(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error) {
+func (receiver *redisPipeline) Pipeline(executeFn func()) error {
 	var err error
-	traceDetail := receiver.traceManager.TraceRedis("TxPipeline", "", "")
+	traceDetail := receiver.traceManager.TraceRedis("Pipeline", "", "")
 	defer func() { traceDetail.End(err) }()
 
 	// 开启管道
-	txPipeline := receiver.rdb.Pipeline()
-	executeFn(txPipeline)
-	var exec []redis.Cmder
-	exec, err = txPipeline.Exec(nil)
+	txPipeline := receiver.GetClient().Pipeline()
+	routineRedisClient.Set(txPipeline)
 
-	return exec, err
+	executeFn()
+	_, err = txPipeline.Exec(context.Background())
+	return err
 }

@@ -141,7 +141,7 @@ type IClient interface {
 	GetLeaderId(key string) int64
 
 	// Transaction 开启事务
-	Transaction(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error)
+	Transaction(executeFn func()) error
 	// Pipeline 开启管道
-	Pipeline(executeFn func(tx redis.Pipeliner)) ([]redis.Cmder, error)
+	Pipeline(executeFn func()) error
 }

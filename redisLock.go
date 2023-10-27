@@ -5,33 +5,28 @@ import (
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/stopwatch"
-	"github.com/farseer-go/fs/trace"
-	"github.com/go-redis/redis/v8"
 	"time"
 )
 
 // 分布式锁
 type redisLock struct {
-	rdb          *redis.Client
-	traceManager trace.IManager
+	*redisManager
 }
 
 type lockResult struct {
-	key          string // 锁名称
-	val          string // 锁值
-	expiration   time.Duration
-	rdb          *redis.Client
-	traceManager trace.IManager
+	key        string // 锁名称
+	val        string // 锁值
+	expiration time.Duration
+	*redisManager
 }
 
 // LockNew 创建锁
 func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock {
 	return &lockResult{
-		rdb:          r.rdb,
 		key:          key,
 		val:          val,
 		expiration:   expiration,
-		traceManager: r.traceManager,
+		redisManager: r.redisManager,
 	}
 }
 
@@ -39,7 +34,7 @@ func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock
 func (receiver *lockResult) TryLock() bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLock", receiver.key, "")
 
-	result, err := receiver.rdb.SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+	result, err := receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
 	defer func() { traceDetail.End(err) }()
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
@@ -52,7 +47,7 @@ func (receiver *lockResult) TryLockRun(fn func()) bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLockRun", receiver.key, "")
 
 	sw := stopwatch.StartNew()
-	result, err := receiver.rdb.SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+	result, err := receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
 	defer func() { traceDetail.End(err) }()
 	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
@@ -73,7 +68,7 @@ func (receiver *lockResult) GetLock() {
 
 	for {
 		var result bool
-		result, err = receiver.rdb.SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+		result, err = receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
 
 		if err != nil {
 			_ = flog.Errorf("redis加锁异常：%s", err.Error())
@@ -98,7 +93,7 @@ func (receiver *lockResult) GetLockRun(fn func()) {
 // ReleaseLock 锁放锁
 func (receiver *lockResult) ReleaseLock() {
 	traceDetail := receiver.traceManager.TraceRedis("ReleaseLock", receiver.key, "")
-	_, err := receiver.rdb.Del(fs.Context, receiver.key).Result()
+	_, err := receiver.GetClient().Del(fs.Context, receiver.key).Result()
 	defer func() { traceDetail.End(err) }()
 
 }

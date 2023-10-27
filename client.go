@@ -32,23 +32,26 @@ func newClient(redisConfig redisConfig) IClient {
 		WriteTimeout: time.Duration(redisConfig.SyncTimeout) * time.Millisecond,     //同步超时时间设置
 		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout) * time.Millisecond, //响应超时时间设置
 	})
-
-	traceManager := container.Resolve[trace.IManager]()
+	rm := &redisManager{
+		traceManager: container.Resolve[trace.IManager](),
+		rdb:          rdb,
+	}
 	return &client{
 		original:      rdb,
-		redisKey:      redisKey{rdb: rdb, traceManager: traceManager},
-		redisString:   redisString{rdb: rdb, traceManager: traceManager},
-		redisHash:     redisHash{rdb: rdb, traceManager: traceManager},
-		redisList:     redisList{rdb: rdb, traceManager: traceManager},
-		redisSet:      redisSet{rdb: rdb, traceManager: traceManager},
-		redisZSet:     redisZSet{rdb: rdb, traceManager: traceManager},
-		redisLock:     redisLock{rdb: rdb, traceManager: traceManager},
-		redisPub:      redisPub{rdb: rdb, traceManager: traceManager},
-		redisElection: redisElection{rdb: rdb, traceManager: traceManager},
-		redisPipeline: redisPipeline{rdb: rdb, traceManager: traceManager},
+		redisKey:      redisKey{redisManager: rm},
+		redisString:   redisString{redisManager: rm},
+		redisHash:     redisHash{redisManager: rm},
+		redisList:     redisList{redisManager: rm},
+		redisSet:      redisSet{redisManager: rm},
+		redisZSet:     redisZSet{redisManager: rm},
+		redisLock:     redisLock{redisManager: rm},
+		redisPub:      redisPub{redisManager: rm},
+		redisElection: redisElection{redisManager: rm},
+		redisPipeline: redisPipeline{redisManager: rm},
 	}
 }
 
+// RegisterEvent 注册事件
 func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc) {
 	// 注册仓储
 	container.Register(func() core.IEvent {
