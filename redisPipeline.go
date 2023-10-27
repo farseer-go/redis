@@ -14,7 +14,7 @@ func (receiver *redisPipeline) Transaction(executeFn func()) error {
 	// 开启事务
 	txPipeline := receiver.GetClient().TxPipeline()
 	routineRedisClient.Set(txPipeline)
-
+	defer func() { routineRedisClient.Remove() }()
 	executeFn()
 	_, err = txPipeline.Exec(context.Background())
 	return err
@@ -28,6 +28,7 @@ func (receiver *redisPipeline) Pipeline(executeFn func()) error {
 	// 开启管道
 	txPipeline := receiver.GetClient().Pipeline()
 	routineRedisClient.Set(txPipeline)
+	defer func() { routineRedisClient.Remove() }()
 
 	executeFn()
 	_, err = txPipeline.Exec(context.Background())
