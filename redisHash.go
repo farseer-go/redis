@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/flog"
@@ -88,7 +89,7 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 	}
 
 	result, err := receiver.GetClient().HGetAll(fs.Context, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
@@ -96,14 +97,11 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 		return flog.Error(err)
 	}
 
-	lst := collections.NewListAny()
 	for _, vJson := range result {
-		item := reflect.New(arrType.Elem()).Interface()
-		_ = json.Unmarshal([]byte(vJson), item)
-		lst.Add(reflect.ValueOf(item).Elem().Interface())
+		item := reflect.New(arrType.Elem()).Elem().Interface()
+		_ = json.Unmarshal([]byte(vJson), &item)
+		arrVal = reflect.Append(arrVal, reflect.ValueOf(item))
 	}
-
-	lst.MapToArray(arrSlice)
 	return nil
 }
 
