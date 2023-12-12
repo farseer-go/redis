@@ -97,11 +97,13 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 		return flog.Error(err)
 	}
 
+	newArr := reflect.MakeSlice(arrVal.Type(), 0, 0)
 	for _, vJson := range result {
-		item := reflect.New(arrType.Elem()).Elem().Interface()
-		_ = json.Unmarshal([]byte(vJson), &item)
-		arrVal = reflect.Append(arrVal, reflect.ValueOf(item))
+		item := reflect.New(arrType.Elem()).Interface()
+		_ = json.Unmarshal([]byte(vJson), item)
+		newArr = reflect.Append(newArr, reflect.ValueOf(item).Elem())
 	}
+	arrVal.Set(newArr)
 	return nil
 }
 
