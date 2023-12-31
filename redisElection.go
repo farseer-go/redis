@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs"
+	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
 	"time"
 )
@@ -15,7 +16,7 @@ type redisElection struct {
 // 未拿到master，会持续尝试获取master
 func (receiver *redisElection) Election(key string, fn func()) {
 	for {
-		cmd := receiver.GetClient().SetNX(fs.Context, key, fs.AppId, 20*time.Second)
+		cmd := receiver.GetClient().SetNX(fs.Context, key, core.AppId, 20*time.Second)
 		result, _ := cmd.Result()
 		// 拿到锁了
 		if result {
