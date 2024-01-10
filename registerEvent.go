@@ -17,7 +17,6 @@ type registerEvent struct {
 }
 
 func (receiver *registerEvent) Publish(message any) error {
-	traceDetail := receiver.traceManager.TraceRedis("Publish", receiver.eventName, "")
 	var jsonContent string
 	switch message.(type) {
 	case string:
@@ -27,7 +26,6 @@ func (receiver *registerEvent) Publish(message any) error {
 		jsonContent = string(b)
 	}
 	_, err := receiver.client.Publish(receiver.eventName, jsonContent)
-	defer func() { traceDetail.End(err) }()
 	return err
 }
 
