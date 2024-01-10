@@ -4,7 +4,6 @@ import (
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
-	"github.com/farseer-go/fs/stopwatch"
 	"time"
 )
 
@@ -46,10 +45,10 @@ func (receiver *lockResult) TryLock() bool {
 func (receiver *lockResult) TryLockRun(fn func()) bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLockRun", receiver.key, "")
 
-	sw := stopwatch.StartNew()
+	//sw := stopwatch.StartNew()
 	result, err := receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
 	defer func() { traceDetail.End(err) }()
-	flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
+	//flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
 	}
