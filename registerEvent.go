@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
-	"github.com/farseer-go/fs/snowflake"
+	"github.com/farseer-go/fs/sonyflake"
 	"github.com/farseer-go/fs/trace"
 	"strconv"
 	"time"
@@ -47,7 +47,7 @@ func RegisterEvent(redisConfigName, eventName string, fns ...core.ConsumerFunc) 
 func subscribe(client IClient, eventName string, fns []core.ConsumerFunc) {
 	for message := range client.Subscribe(eventName) {
 		eventArgs := core.EventArgs{
-			Id:         strconv.FormatInt(snowflake.GenerateId(), 10),
+			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
 			CreateAt:   time.Now().UnixMilli(),
 			Message:    message.Payload,
 			ErrorCount: 0,
