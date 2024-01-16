@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
+	"github.com/farseer-go/fs/exception"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/sonyflake"
 	"github.com/farseer-go/fs/trace"
 	"strconv"
@@ -29,23 +31,44 @@ func (receiver *registerEvent) Publish(message any) error {
 	return err
 }
 
+type registerSubscribe struct {
+	eventName string
+	client    IClient
+	consumers map[string]core.ConsumerFunc
+}
+
 // RegisterEvent 注册core.IEvent实现
-func RegisterEvent(redisConfigName, eventName string, fns ...core.ConsumerFunc) {
-	client := container.Resolve[IClient](redisConfigName)
+func RegisterEvent(redisConfigName, eventName string) *registerSubscribe {
+	redisClient := container.Resolve[IClient](redisConfigName)
 	// 注册仓储
 	container.Register(func() core.IEvent {
 		return &registerEvent{
 			eventName:    eventName,
-			client:       client,
+			client:       redisClient,
 			traceManager: container.Resolve[trace.IManager](),
 		}
 	}, eventName)
 
-	go subscribe(client, eventName, fns)
+	sub := &registerSubscribe{
+		eventName: eventName,
+		client:    redisClient,
+		consumers: make(map[string]core.ConsumerFunc),
+	}
+	go sub.subscribe()
+	return sub
 }
 
-func subscribe(client IClient, eventName string, fns []core.ConsumerFunc) {
-	for message := range client.Subscribe(eventName) {
+// RegisterSubscribe 注册订阅者
+func (receiver *registerSubscribe) RegisterSubscribe(subscribeName string, consumerFunc core.ConsumerFunc) *registerSubscribe {
+	if _, exists := receiver.consumers[subscribeName]; exists {
+		panic("RegisterSubscribe已存在相同的订阅者名称：" + subscribeName)
+	}
+	receiver.consumers[subscribeName] = consumerFunc
+	return receiver
+}
+
+func (receiver *registerSubscribe) subscribe() {
+	for message := range receiver.client.Subscribe(receiver.eventName) {
 		eventArgs := core.EventArgs{
 			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
 			CreateAt:   time.Now().UnixMilli(),
@@ -55,8 +78,17 @@ func subscribe(client IClient, eventName string, fns []core.ConsumerFunc) {
 		}
 
 		// 同时订阅消费
-		for i := 0; i < len(fns); i++ {
-			fns[i](message.Payload, eventArgs)
+		for subscribeName, consumerFunc := range receiver.consumers {
+			// 创建一个事件消费入口
+			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(receiver.eventName, subscribeName)
+			try := exception.Try(func() {
+				consumerFunc(message.Payload, eventArgs)
+			})
+			try.CatchException(func(exp any) {
+				err := flog.Error(exp)
+				eventTraceContext.Error(err)
+			})
+			eventTraceContext.End()
 		}
 	}
 }
