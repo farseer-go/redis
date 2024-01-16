@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/exception"
@@ -68,6 +69,7 @@ func (receiver *registerSubscribe) RegisterSubscribe(subscribeName string, consu
 }
 
 func (receiver *registerSubscribe) subscribe() {
+	server := fmt.Sprintf("redis订阅/%s", receiver.client.Original().String())
 	for message := range receiver.client.Subscribe(receiver.eventName) {
 		eventArgs := core.EventArgs{
 			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
@@ -80,7 +82,7 @@ func (receiver *registerSubscribe) subscribe() {
 		// 同时订阅消费
 		for subscribeName, consumerFunc := range receiver.consumers {
 			// 创建一个事件消费入口
-			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(receiver.eventName, subscribeName)
+			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
 			try := exception.Try(func() {
 				consumerFunc(message.Payload, eventArgs)
 			})
