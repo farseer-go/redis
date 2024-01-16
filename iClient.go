@@ -12,7 +12,7 @@ type IClient interface {
 	// Original 获取原生的客户端
 	Original() *redis.Client
 	// RegisterEvent 注册core.IEvent实现
-	RegisterEvent(eventName string, fns ...core.ConsumerFunc)
+	RegisterEvent(eventName string) *registerSubscribe
 
 	// SetTTL 设置过期时间
 	SetTTL(key string, d time.Duration) (bool, error)

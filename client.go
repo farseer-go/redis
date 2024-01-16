@@ -52,7 +52,7 @@ func newClient(redisConfig redisConfig) IClient {
 }
 
 // RegisterEvent 注册事件
-func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc) {
+func (receiver *client) RegisterEvent(eventName string) *registerSubscribe {
 	// 注册仓储
 	container.Register(func() core.IEvent {
 		return &registerEvent{
@@ -62,7 +62,13 @@ func (receiver *client) RegisterEvent(eventName string, fns ...core.ConsumerFunc
 		}
 	}, eventName)
 
-	go subscribe(receiver, eventName, fns)
+	sub := &registerSubscribe{
+		eventName: eventName,
+		client:    receiver,
+		consumers: make(map[string]core.ConsumerFunc),
+	}
+	go sub.subscribe()
+	return sub
 }
 
 // Original 获取原生的客户端
