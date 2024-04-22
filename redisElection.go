@@ -47,7 +47,8 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			receiver.GetClient().Del(ctx, key)
+			receiver.GetClient().Del(context.Background(), key).Result()
+			return
 		case <-time.After(10 * time.Second):
 			_, _ = receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
 		}
