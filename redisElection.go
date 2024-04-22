@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
@@ -17,13 +18,13 @@ type redisElection struct {
 func (receiver *redisElection) Election(key string, fn func()) {
 	for {
 		cmd := receiver.GetClient().SetNX(fs.Context, key, core.AppId, 20*time.Second)
-		result, _ := cmd.Result()
 		// 拿到锁了
-		if result {
+		if result, _ := cmd.Result(); result {
+			ctx, cancel := context.WithCancel(context.Background())
 			// 给锁续租约
-			go receiver.leaseRenewal(key)
+			go receiver.leaseRenewal(key, ctx)
 			fn()
-			<-fs.Context.Done()
+			cancel()
 			return
 		}
 
@@ -42,9 +43,13 @@ func (receiver *redisElection) GetLeaderId(key string) int64 {
 }
 
 // 续约
-func (receiver *redisElection) leaseRenewal(key string) {
+func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 	for {
-		<-time.After(10 * time.Second)
-		_, _ = receiver.GetClient().Expire(fs.Context, key, 20*time.Second).Result()
+		select {
+		case <-ctx.Done():
+			receiver.GetClient().Del(ctx, key)
+		case <-time.After(10 * time.Second):
+			_, _ = receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
+		}
 	}
 }
