@@ -20,7 +20,7 @@ func (receiver *redisElection) Election(key string, fn func()) {
 		cmd := receiver.GetClient().SetNX(fs.Context, key, core.AppId, 20*time.Second)
 		// 拿到锁了
 		if result, _ := cmd.Result(); result {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(fs.Context)
 			// 给锁续租约
 			go receiver.leaseRenewal(key, ctx)
 			fn()
@@ -47,7 +47,7 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			receiver.GetClient().Del(context.Background(), key).Result()
+			receiver.GetClient().Del(fs.Context, key).Result()
 			return
 		case <-time.After(10 * time.Second):
 			_, _ = receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
