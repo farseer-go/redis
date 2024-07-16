@@ -57,7 +57,7 @@ func (receiver *redisHash) HashGetAll(key string) (map[string]string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashGetAll", key, "")
 
 	result, err := receiver.GetClient().HGetAll(fs.Context, key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
@@ -69,7 +69,7 @@ func (receiver *redisHash) HashToEntity(key string, field string, entity any) (b
 
 	jsonContent, err := receiver.GetClient().HGet(fs.Context, key, field).Result()
 	defer func() { traceDetail.End(err) }()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 		return false, err
 	}
