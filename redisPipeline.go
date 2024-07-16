@@ -1,6 +1,8 @@
 package redis
 
-import "context"
+import (
+	"context"
+)
 
 type redisPipeline struct {
 	*redisManager
@@ -20,7 +22,7 @@ func (receiver *redisPipeline) Transaction(executeFn func()) error {
 	return err
 }
 
-func (receiver *redisPipeline) Pipeline(executeFn func()) error {
+func (receiver *redisPipeline) Pipeline(executeFn func()) (PipelineCmder, error) {
 	var err error
 	traceDetail := receiver.traceManager.TraceRedis("Pipeline", "", "")
 	defer func() { traceDetail.End(err) }()
@@ -31,6 +33,6 @@ func (receiver *redisPipeline) Pipeline(executeFn func()) error {
 	defer func() { routineRedisClient.Remove() }()
 
 	executeFn()
-	_, err = txPipeline.Exec(context.Background())
-	return err
+	result, err := txPipeline.Exec(context.Background())
+	return PipelineCmder{cmder: result}, err
 }

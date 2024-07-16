@@ -143,5 +143,5 @@ type IClient interface {
 	// Transaction 开启事务
 	Transaction(executeFn func()) error
 	// Pipeline 开启管道
-	Pipeline(executeFn func()) error
+	Pipeline(executeFn func()) (PipelineCmder, error)
 }
