@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"errors"
+	"github.com/go-redis/redis/v8"
 )
 
 type redisPipeline struct {
@@ -34,5 +36,8 @@ func (receiver *redisPipeline) Pipeline(executeFn func()) (PipelineCmder, error)
 
 	executeFn()
 	result, err := txPipeline.Exec(context.Background())
+	if errors.Is(err, redis.Nil) {
+		err = nil
+	}
 	return PipelineCmder{cmder: result}, err
 }
