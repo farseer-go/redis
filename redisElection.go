@@ -48,7 +48,6 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			receiver.rdb.Del(context.Background(), key).Result()
-			flog.Info(key + "退出")
 			return
 		case <-time.After(10 * time.Second):
 			for {
@@ -56,18 +55,17 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 				flog.Infof("key:%s，ttl：%s", key, duration.String())
 				result, err := receiver.rdb.Expire(ctx, key, 30*time.Second).Result()
 				if result {
-					flog.Info(key + "续约成功")
 					break
 				}
 				if result, _ := receiver.rdb.Exists(context.Background(), key).Result(); result == 0 {
-					flog.Warning(key + "不存在了，退出")
+					flog.Warning("选举key:" + key + "不存在了，退出")
 					return
 				}
 
 				if err != nil {
-					flog.Warning(key + "续约失败：" + err.Error())
+					flog.Warning("选举key:" + key + "续约失败：" + err.Error())
 				} else {
-					flog.Warning(key + "续约失败")
+					flog.Warning("选举key:" + key + "续约失败")
 				}
 				time.Sleep(time.Second)
 			}
