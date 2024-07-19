@@ -29,6 +29,8 @@ type IClient interface {
 	StringGet(key string) (string, error)
 	// StringSetNX 设置过期时间（如果KEY存在，则会更新失败）
 	StringSetNX(key string, value any, expiration time.Duration) (bool, error)
+	// StringSetEX 设置过期时间（如果KEY存在，则会覆盖）
+	StringSetEX(key string, value any, expiration time.Duration) (string, error)
 
 	// HashSetEntity 添加并序列化成json
 	HashSetEntity(key string, field string, entity any) error
