@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"github.com/farseer-go/fs/core"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"time"
 )
@@ -17,7 +16,7 @@ type redisElection struct {
 // 未拿到master，会持续尝试获取master
 func (receiver *redisElection) Election(key string, fn func()) {
 	for {
-		cmd := receiver.rdb.SetNX(context.Background(), key, core.AppId, 30*time.Second)
+		cmd := receiver.rdb.SetNX(context.Background(), key, core.AppId, 20*time.Second)
 		// 拿到锁了
 		if result, err := cmd.Result(); result && err == nil {
 			ctx, cancel := context.WithCancel(context.Background())
@@ -47,28 +46,10 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			receiver.rdb.Del(context.Background(), key).Result()
+			_, _ = receiver.rdb.Del(context.Background(), key).Result()
 			return
 		case <-time.After(10 * time.Second):
-			for {
-				duration, _ := receiver.rdb.TTL(context.Background(), key).Result()
-				flog.Infof("key:%s，ttl：%s", key, duration.String())
-				result, err := receiver.rdb.Expire(ctx, key, 30*time.Second).Result()
-				if result {
-					break
-				}
-				if result, _ := receiver.rdb.Exists(context.Background(), key).Result(); result == 0 {
-					flog.Warning("选举key:" + key + "不存在了，退出")
-					return
-				}
-
-				if err != nil {
-					flog.Warning("选举key:" + key + "续约失败：" + err.Error())
-				} else {
-					flog.Warning("选举key:" + key + "续约失败")
-				}
-				time.Sleep(time.Second)
-			}
+			_, _ = receiver.rdb.Expire(ctx, key, 20*time.Second).Result()
 		}
 	}
 }
