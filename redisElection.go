@@ -49,16 +49,20 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			receiver.GetClient().Del(fs.Context, key).Result()
-			flog.Infof(key + "退出")
+			flog.Info(key + "退出")
 			return
 		case <-time.After(10 * time.Second):
 			for {
 				result, err := receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
 				if result {
-					flog.Infof(key + "续约成功")
+					flog.Info(key + "续约成功")
 					break
 				}
-				flog.Infof(key + "续约失败：" + err.Error())
+				if err != nil {
+					flog.Warning(key + "续约失败：" + err.Error())
+				} else {
+					flog.Warning(key + "续约失败")
+				}
 				time.Sleep(time.Second)
 			}
 		}
