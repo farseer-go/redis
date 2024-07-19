@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/core"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"time"
 )
@@ -48,9 +49,18 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			receiver.GetClient().Del(fs.Context, key).Result()
+			flog.Infof(key + "退出")
 			return
 		case <-time.After(10 * time.Second):
-			_, _ = receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
+			for {
+				result, _ := receiver.GetClient().Expire(ctx, key, 20*time.Second).Result()
+				if result {
+					flog.Infof(key + "续约成功")
+					break
+				}
+				flog.Infof(key + "续约失败")
+				time.Sleep(time.Second)
+			}
 		}
 	}
 }
