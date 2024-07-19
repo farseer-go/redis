@@ -2,6 +2,7 @@ package redis
 
 import (
 	"github.com/farseer-go/fs/asyncLocal"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
 )
@@ -17,6 +18,7 @@ type redisManager struct {
 func (receiver *redisManager) GetClient() redis.Cmdable {
 	cmdClient := routineRedisClient.Get()
 	if cmdClient != nil {
+		flog.Infof("使用了管理或事务")
 		return cmdClient
 	}
 	return receiver.rdb
