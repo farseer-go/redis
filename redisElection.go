@@ -57,6 +57,11 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 					flog.Info(key + "续约成功")
 					break
 				}
+				if result, _ := receiver.rdb.Exists(context.Background(), key).Result(); result == 0 {
+					flog.Warning(key + "不存在了，退出")
+					return
+				}
+
 				if err != nil {
 					flog.Warning(key + "续约失败：" + err.Error())
 				} else {
