@@ -3,7 +3,9 @@ package redis
 import (
 	"context"
 	"errors"
+	"github.com/farseer-go/fs/flog"
 	"github.com/go-redis/redis/v8"
+	"github.com/timandy/routine"
 )
 
 type redisPipeline struct {
@@ -17,6 +19,7 @@ func (receiver *redisPipeline) Transaction(executeFn func()) error {
 
 	// 开启事务
 	txPipeline := receiver.GetClient().TxPipeline()
+	flog.Infof("使用事务：%d", routine.Goid())
 	routineRedisClient.Set(txPipeline)
 	defer func() { routineRedisClient.Remove() }()
 	executeFn()
@@ -31,6 +34,7 @@ func (receiver *redisPipeline) Pipeline(executeFn func()) (PipelineCmder, error)
 
 	// 开启管道
 	txPipeline := receiver.GetClient().Pipeline()
+	flog.Infof("使用管道：%d", routine.Goid())
 	routineRedisClient.Set(txPipeline)
 	defer func() { routineRedisClient.Remove() }()
 
