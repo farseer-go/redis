@@ -22,5 +22,6 @@ func (receiver *redisManager) GetClient() redis.Cmdable {
 		flog.Infof("使用了管理或事务:%d", routine.Goid())
 		return cmdClient
 	}
+	flog.Infof("使用原生redis:%d", routine.Goid())
 	return receiver.rdb
 }
