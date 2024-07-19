@@ -19,7 +19,7 @@ type redisManager struct {
 func (receiver *redisManager) GetClient() redis.Cmdable {
 	cmdClient := routineRedisClient.Get()
 	if cmdClient != nil {
-		flog.Infof("使用了管理或事务:%d", routine.Goid())
+		flog.Infof("使用了管道或事务:%d", routine.Goid())
 		return cmdClient
 	}
 	flog.Infof("使用原生redis:%d", routine.Goid())
