@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/farseer-go/fs"
+	"context"
 	"strings"
 	"time"
 )
@@ -13,7 +13,7 @@ type redisKey struct {
 func (receiver *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
 	traceDetail := receiver.traceManager.TraceRedis("SetTTL", key, "")
 
-	result, err := receiver.GetClient().Expire(fs.Context, key, d).Result()
+	result, err := receiver.GetClient().Expire(context.Background(), key, d).Result()
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -21,7 +21,7 @@ func (receiver *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
 func (receiver *redisKey) TTL(key string) (time.Duration, error) {
 	traceDetail := receiver.traceManager.TraceRedis("TTL", key, "")
 
-	result, err := receiver.GetClient().TTL(fs.Context, key).Result()
+	result, err := receiver.GetClient().TTL(context.Background(), key).Result()
 	defer func() { traceDetail.End(err) }()
 	return result, err
 }
@@ -29,7 +29,7 @@ func (receiver *redisKey) TTL(key string) (time.Duration, error) {
 func (receiver *redisKey) Del(keys ...string) (bool, error) {
 	traceDetail := receiver.traceManager.TraceRedis("Del", strings.Join(keys, ","), "")
 
-	result, err := receiver.GetClient().Del(fs.Context, keys...).Result()
+	result, err := receiver.GetClient().Del(context.Background(), keys...).Result()
 	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }
@@ -37,7 +37,7 @@ func (receiver *redisKey) Del(keys ...string) (bool, error) {
 func (receiver *redisKey) Exists(keys ...string) (bool, error) {
 	traceDetail := receiver.traceManager.TraceRedis("Exists", strings.Join(keys, ","), "")
 
-	result, err := receiver.GetClient().Exists(fs.Context, keys...).Result()
+	result, err := receiver.GetClient().Exists(context.Background(), keys...).Result()
 	defer func() { traceDetail.End(err) }()
 	return result > 0, err
 }

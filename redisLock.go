@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/farseer-go/fs"
+	"context"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
 	"time"
@@ -33,7 +33,7 @@ func (r redisLock) LockNew(key, val string, expiration time.Duration) core.ILock
 func (receiver *lockResult) TryLock() bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLock", receiver.key, "")
 
-	result, err := receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+	result, err := receiver.GetClient().SetNX(context.Background(), receiver.key, receiver.val, receiver.expiration).Result()
 	defer func() { traceDetail.End(err) }()
 	if err != nil {
 		_ = flog.Errorf("redis加锁异常：%s", err.Error())
@@ -46,7 +46,7 @@ func (receiver *lockResult) TryLockRun(fn func()) bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLockRun", receiver.key, "")
 
 	//sw := stopwatch.StartNew()
-	result, err := receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+	result, err := receiver.GetClient().SetNX(context.Background(), receiver.key, receiver.val, receiver.expiration).Result()
 	defer func() { traceDetail.End(err) }()
 	//flog.Debugf("获取Redis锁，耗时：%s", sw.GetMicrosecondsText())
 	if err != nil {
@@ -67,7 +67,7 @@ func (receiver *lockResult) GetLock() {
 
 	for {
 		var result bool
-		result, err = receiver.GetClient().SetNX(fs.Context, receiver.key, receiver.val, receiver.expiration).Result()
+		result, err = receiver.GetClient().SetNX(context.Background(), receiver.key, receiver.val, receiver.expiration).Result()
 
 		if err != nil {
 			_ = flog.Errorf("redis加锁异常：%s", err.Error())
@@ -92,7 +92,7 @@ func (receiver *lockResult) GetLockRun(fn func()) {
 // ReleaseLock 锁放锁
 func (receiver *lockResult) ReleaseLock() {
 	traceDetail := receiver.traceManager.TraceRedis("ReleaseLock", receiver.key, "")
-	_, err := receiver.GetClient().Del(fs.Context, receiver.key).Result()
+	_, err := receiver.GetClient().Del(context.Background(), receiver.key).Result()
 	defer func() { traceDetail.End(err) }()
 
 }

@@ -2,10 +2,8 @@ package redis
 
 import (
 	"github.com/farseer-go/fs/asyncLocal"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
-	"github.com/timandy/routine"
 )
 
 // 实现同一个协程下的事务作用域
@@ -19,9 +17,7 @@ type redisManager struct {
 func (receiver *redisManager) GetClient() redis.Cmdable {
 	cmdClient := routineRedisClient.Get()
 	if cmdClient != nil {
-		flog.Infof("使用了管道或事务:%d", routine.Goid())
 		return cmdClient
 	}
-	flog.Infof("使用原生redis:%d", routine.Goid())
 	return receiver.rdb
 }
