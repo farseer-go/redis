@@ -52,6 +52,8 @@ func (receiver *redisElection) leaseRenewal(key string, ctx context.Context) {
 			return
 		case <-time.After(10 * time.Second):
 			for {
+				duration, _ := receiver.rdb.TTL(context.Background(), key).Result()
+				flog.Infof("key:%s，ttl：%s", key, duration.String())
 				result, err := receiver.rdb.Expire(ctx, key, 30*time.Second).Result()
 				if result {
 					flog.Info(key + "续约成功")
