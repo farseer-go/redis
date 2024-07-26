@@ -62,7 +62,7 @@ func (r *cacheInRedis) GetItem(cacheId any) any {
 	entityPtr := reflect.New(r.itemType).Interface()
 
 	// hash get
-	exists, err := r.redisClient.HashToEntity(r.key, parse.Convert(cacheId, ""), entityPtr)
+	exists, err := r.redisClient.HashToEntity(r.key, parse.ToString(cacheId), entityPtr)
 	flog.ErrorIfExists(err)
 	if !exists {
 		return nil
@@ -70,6 +70,33 @@ func (r *cacheInRedis) GetItem(cacheId any) any {
 
 	r.updateExpiry()
 	return reflect.ValueOf(entityPtr).Elem().Interface()
+}
+
+func (r *cacheInRedis) GetItems(cacheIds []any) collections.ListAny {
+	var keys []string
+	for _, cacheId := range cacheIds {
+		keys = append(keys, parse.ToString(cacheId))
+	}
+
+	items := collections.NewListAny()
+
+	// 批量获取
+	results, err := r.redisClient.HashGets(r.key, keys...)
+	flog.ErrorIfExists(err)
+	if err != nil {
+		return items
+	}
+
+	// 转成数组
+	for _, jsonContent := range results {
+		entity := reflect.New(r.itemType).Interface()
+		if err = json.Unmarshal([]byte(jsonContent), entity); err == nil {
+			items.Add(entity)
+		}
+	}
+
+	r.updateExpiry()
+	return items
 }
 
 func (r *cacheInRedis) Set(val collections.ListAny) {

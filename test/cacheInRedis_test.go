@@ -57,6 +57,21 @@ func TestCacheInRedis_GetItem(t *testing.T) {
 	assert.Equal(t, item2.Age, 19)
 }
 
+func TestCacheInRedis_GetItems(t *testing.T) {
+	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_GetItem", "Name", "default")
+	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
+	lst := cacheManage.GetItems("steden", "steden2")
+	lst = lst.OrderBy(func(item po) any {
+		return item.Age
+	}).ToList()
+
+	assert.Equal(t, lst.Index(0).Name, "steden")
+	assert.Equal(t, lst.Index(0).Age, 18)
+
+	assert.Equal(t, lst.Index(1).Name, "steden2")
+	assert.Equal(t, lst.Index(1).Age, 19)
+}
+
 func TestCacheInRedis_SaveItem(t *testing.T) {
 	cacheManage := redis.SetProfiles[po]("TestCacheInRedis_SaveItem", "Name", "default")
 	cacheManage.Set(po{Name: "steden", Age: 18}, po{Name: "steden2", Age: 19})
