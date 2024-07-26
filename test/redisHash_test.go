@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
@@ -69,8 +68,6 @@ import (
 //}
 
 func Test_redisHash_Count(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "address", "上海")
@@ -79,8 +76,6 @@ func Test_redisHash_Count(t *testing.T) {
 }
 
 func Test_redisHash_Del(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -89,8 +84,6 @@ func Test_redisHash_Del(t *testing.T) {
 }
 
 func Test_redisHash_Exists(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -99,8 +92,6 @@ func Test_redisHash_Exists(t *testing.T) {
 }
 
 func Test_redisHash_Get(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -109,9 +100,18 @@ func Test_redisHash_Get(t *testing.T) {
 	assert.Equal(t, atoi, 40)
 }
 
-func Test_redisHash_GetAll(t *testing.T) {
+func Test_redisHash_Gets(t *testing.T) {
+	client := container.Resolve[redis.IClient]("default")
+	defer client.Del("key_client")
 
-	fs.Initialize[redis.Module]("unit test")
+	client.HashSet("key_client", "age", 40, "address", "上海")
+	get, _ := client.HashGets("key_client", "age", "address")
+
+	assert.Equal(t, "40", get[0])
+	assert.Equal(t, "上海", get[1])
+}
+
+func Test_redisHash_GetAll(t *testing.T) {
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -120,8 +120,6 @@ func Test_redisHash_GetAll(t *testing.T) {
 }
 
 func Test_redisHash_Set(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	err := client.HashSet("key_client", "age", 40, "address", "上海")
@@ -129,8 +127,6 @@ func Test_redisHash_Set(t *testing.T) {
 }
 
 func Test_redisHash_SetEntity(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	type user struct {
@@ -146,8 +142,6 @@ func Test_redisHash_SetEntity(t *testing.T) {
 }
 
 func Test_redisHash_ToArray(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	type user struct {
@@ -163,8 +157,6 @@ func Test_redisHash_ToArray(t *testing.T) {
 }
 
 func Test_redisHash_ToEntity(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	type user struct {

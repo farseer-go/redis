@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
@@ -59,16 +58,12 @@ import (
 //}
 
 func Test_redisSet_Add(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	add, _ := client.SetAdd("key_set", "小丽", "小王", "小白", "小赵", "小钱", "小孙")
 	assert.Equal(t, add, true)
 }
 
 func Test_redisSet_Card(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	card, _ := client.SetCount("key_set")
@@ -76,8 +71,6 @@ func Test_redisSet_Card(t *testing.T) {
 }
 
 func Test_redisSet_Diff(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")
@@ -90,8 +83,6 @@ func Test_redisSet_Diff(t *testing.T) {
 }
 
 func Test_redisSet_DiffStore(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")
@@ -104,8 +95,6 @@ func Test_redisSet_DiffStore(t *testing.T) {
 }
 
 func Test_redisSet_Inter(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")
@@ -117,8 +106,6 @@ func Test_redisSet_Inter(t *testing.T) {
 }
 
 func Test_redisSet_InterStore(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")
@@ -131,8 +118,6 @@ func Test_redisSet_InterStore(t *testing.T) {
 }
 
 func Test_redisSet_IsMember(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	client.SetAdd("key_set", "小丽", "小王", "小白", "小赵", "小钱", "小孙")
@@ -142,8 +127,6 @@ func Test_redisSet_IsMember(t *testing.T) {
 }
 
 func Test_redisSet_Members(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	client.SetAdd("key_set", "小丽", "小王", "小白", "小赵", "小钱", "小孙")
@@ -152,8 +135,6 @@ func Test_redisSet_Members(t *testing.T) {
 }
 
 func Test_redisSet_Rem(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	client.SetAdd("key_set", "小丽", "小王", "小白", "小赵", "小钱", "小孙")
@@ -162,8 +143,6 @@ func Test_redisSet_Rem(t *testing.T) {
 }
 
 func Test_redisSet_Union(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")
@@ -175,8 +154,6 @@ func Test_redisSet_Union(t *testing.T) {
 }
 
 func Test_redisSet_UnionStore(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_set")
 	defer client.Del("key_set2")

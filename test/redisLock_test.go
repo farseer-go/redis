@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/flog"
@@ -13,9 +12,7 @@ import (
 )
 
 func Test_lockResult_Lock(t *testing.T) {
-	//
 	configure.SetDefault("Redis.default", "Server=192.168.1.8:6379,DB=15,Password=steden@123,ConnectTimeout=600000,SyncTimeout=10000,ResponseTimeout=10000")
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	for i := 0; i < 100; i++ {
 		control01(t, client)

@@ -46,11 +46,27 @@ func (receiver *redisHash) HashGet(key string, field string) (string, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashGet", key, field)
 
 	result, err := receiver.GetClient().HGet(context.Background(), key, field).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
 	return result, err
+}
+
+func (receiver *redisHash) HashGets(key string, fields ...string) ([]string, error) {
+	fieldAll := strings.Join(fields, ",")
+	traceDetail := receiver.traceManager.TraceRedis("HashGet", key, fieldAll)
+
+	result, err := receiver.GetClient().HMGet(context.Background(), key, fields...).Result()
+	if errors.Is(err, redis.Nil) {
+		err = nil
+	}
+	defer func() { traceDetail.End(err) }()
+	var arr []string
+	for _, v := range result {
+		arr = append(arr, parse.ToString(v))
+	}
+	return arr, err
 }
 
 func (receiver *redisHash) HashGetAll(key string) (map[string]string, error) {
@@ -112,7 +128,7 @@ func (receiver *redisHash) HashToListAny(key string, itemType reflect.Type) (col
 
 	lst := collections.NewListAny()
 	result, err := receiver.GetClient().HGetAll(context.Background(), key).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
@@ -132,7 +148,7 @@ func (receiver *redisHash) HashExists(key string, field string) (bool, error) {
 	traceDetail := receiver.traceManager.TraceRedis("HashExists", key, field)
 
 	result, err := receiver.GetClient().HExists(context.Background(), key, field).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()

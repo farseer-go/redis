@@ -39,8 +39,10 @@ type IClient interface {
 	//   - HashSet("myHashKey", []string{"field1", "value1", "field2", "value2"})
 	//   - HashSet("myHashKey", map[string]any{"field1": "value1", "field2": "value2"})
 	HashSet(key string, fieldValues ...any) error
-	// HashGet 获取
+	// HashGet 获取Hash单个字段
 	HashGet(key string, field string) (string, error)
+	// HashGets 获取Hash多个字段
+	HashGets(key string, fields ...string) ([]string, error)
 	// HashGetAll 获取所有集合数据
 	HashGetAll(key string) (map[string]string, error)
 	// HashToEntity 获取单个对象

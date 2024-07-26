@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
@@ -36,8 +35,6 @@ func Test_redisList(t *testing.T) {
 }
 
 func Test_redisList_BLPop(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")
@@ -46,8 +43,6 @@ func Test_redisList_BLPop(t *testing.T) {
 }
 
 func Test_redisList_Len(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")
@@ -56,8 +51,6 @@ func Test_redisList_Len(t *testing.T) {
 }
 
 func Test_redisList_Push(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")
@@ -66,8 +59,6 @@ func Test_redisList_Push(t *testing.T) {
 }
 
 func Test_redisList_Range(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")
@@ -76,8 +67,6 @@ func Test_redisList_Range(t *testing.T) {
 }
 
 func Test_redisList_Rem(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")
@@ -86,8 +75,6 @@ func Test_redisList_Rem(t *testing.T) {
 }
 
 func Test_redisList_Set(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_list")
 	client.ListPushRight("key_list", "北京", "上海", "广州", "海南", "河南")

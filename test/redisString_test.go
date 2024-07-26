@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
@@ -32,8 +31,6 @@ import (
 //}
 
 func Test_redisString_Get(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key1")
 	client.StringSet("key1", "9883")
@@ -42,8 +39,6 @@ func Test_redisString_Get(t *testing.T) {
 }
 
 func Test_redisString_Set(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key1")
 	err := client.StringSet("key1", "...3456")
@@ -51,8 +46,6 @@ func Test_redisString_Set(t *testing.T) {
 }
 
 func Test_redisString_SetNX(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key1")
 	nx, _ := client.StringSetNX("key1", "...3456", 100*time.Second)

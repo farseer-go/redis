@@ -1,7 +1,6 @@
 package test
 
 import (
-	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/redis"
 	"github.com/stretchr/testify/assert"
@@ -10,8 +9,6 @@ import (
 )
 
 func Test_redisKey_Del(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -20,8 +17,6 @@ func Test_redisKey_Del(t *testing.T) {
 }
 
 func Test_redisKey_Exists(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
@@ -30,8 +25,6 @@ func Test_redisKey_Exists(t *testing.T) {
 }
 
 func Test_redisKey_TTL(t *testing.T) {
-
-	fs.Initialize[redis.Module]("unit test")
 	client := container.Resolve[redis.IClient]("default")
 	defer client.Del("key_client")
 	client.HashSet("key_client", "age", 40, "address", "上海")
