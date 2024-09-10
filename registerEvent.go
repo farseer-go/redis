@@ -32,6 +32,18 @@ func (receiver *registerEvent) Publish(message any) error {
 	return err
 }
 
+func (receiver *registerEvent) PublishAsync(message any) {
+	var jsonContent string
+	switch message.(type) {
+	case string:
+		jsonContent = message.(string)
+	default:
+		b, _ := json.Marshal(message)
+		jsonContent = string(b)
+	}
+	go receiver.client.Publish(receiver.eventName, jsonContent)
+}
+
 type registerSubscribe struct {
 	eventName string
 	client    IClient
