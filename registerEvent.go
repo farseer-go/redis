@@ -93,16 +93,16 @@ func (receiver *registerSubscribe) subscribe() {
 
 		// 同时订阅消费
 		for subscribeName, consumerFunc := range receiver.consumers {
+			var err error
 			// 创建一个事件消费入口
 			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
 			try := exception.Try(func() {
 				consumerFunc(message.Payload, eventArgs)
 			})
 			try.CatchException(func(exp any) {
-				err := flog.Error(exp)
-				eventTraceContext.Error(err)
+				err = flog.Error(exp)
 			})
-			eventTraceContext.End()
+			eventTraceContext.End(err)
 		}
 	}
 }
