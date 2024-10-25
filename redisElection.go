@@ -2,9 +2,10 @@ package redis
 
 import (
 	"context"
+	"time"
+
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
-	"time"
 )
 
 // 选举
