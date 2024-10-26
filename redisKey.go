@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"time"
+
+	"github.com/farseer-go/fs/parse"
 )
 
 type redisKey struct {
@@ -15,6 +17,10 @@ func (receiver *redisKey) SetTTL(key string, d time.Duration) (bool, error) {
 
 	result, err := receiver.GetClient().Expire(context.Background(), key, d).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -31,6 +37,10 @@ func (receiver *redisKey) Del(keys ...string) (bool, error) {
 
 	result, err := receiver.GetClient().Del(context.Background(), keys...).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 

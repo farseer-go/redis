@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
+	"strings"
+
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
-	"reflect"
-	"strings"
 )
 
 type redisHash struct {
@@ -27,6 +28,9 @@ func (receiver *redisHash) HashSetEntity(key string, field string, entity any) e
 	}
 
 	err = receiver.GetClient().HSet(context.Background(), key, field, string(jsonContent)).Err()
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return err
 }
 
@@ -39,6 +43,10 @@ func (receiver *redisHash) HashSet(key string, fieldValues ...any) error {
 	traceDetail := receiver.traceManager.TraceRedis("HashSet", key, strings.Join(fields, ","))
 	err := receiver.GetClient().HSet(context.Background(), key, fieldValues...).Err()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(fields))
+	}
 	return err
 }
 
@@ -49,7 +57,12 @@ func (receiver *redisHash) HashGet(key string, field string) (string, error) {
 	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
+
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result != "" {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -66,6 +79,8 @@ func (receiver *redisHash) HashGets(key string, fields ...string) ([]string, err
 	for _, v := range result {
 		arr = append(arr, parse.ToString(v))
 	}
+
+	traceDetail.SetRows(len(result))
 	return arr, err
 }
 
@@ -77,6 +92,8 @@ func (receiver *redisHash) HashGetAll(key string) (map[string]string, error) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	traceDetail.SetRows(len(result))
 	return result, err
 }
 
@@ -92,8 +109,13 @@ func (receiver *redisHash) HashToEntity(key string, field string, entity any) (b
 	if err != nil {
 		return false, err
 	}
+	err = json.Unmarshal([]byte(jsonContent), entity)
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	// 反序列
-	return true, json.Unmarshal([]byte(jsonContent), entity)
+	return true, err
 }
 
 func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
@@ -120,6 +142,10 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 		newArr = reflect.Append(newArr, reflect.ValueOf(item).Elem())
 	}
 	arrVal.Set(newArr)
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return nil
 }
 
@@ -141,6 +167,10 @@ func (receiver *redisHash) HashToListAny(key string, itemType reflect.Type) (col
 		_ = json.Unmarshal([]byte(vJson), item)
 		lst.Add(reflect.ValueOf(item).Elem().Interface())
 	}
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return lst, nil
 }
 
@@ -160,6 +190,10 @@ func (receiver *redisHash) HashDel(key string, fields ...string) (bool, error) {
 
 	result, err := receiver.GetClient().HDel(context.Background(), key, fields...).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 
@@ -168,7 +202,12 @@ func (receiver *redisHash) HashCount(key string) int {
 
 	result, err := receiver.GetClient().HLen(context.Background(), key).Uint64()
 	defer func() { traceDetail.End(err) }()
-	return int(result)
+
+	rows := parse.ToInt(result)
+	if err == nil {
+		traceDetail.SetRows(rows)
+	}
+	return rows
 }
 
 func (receiver *redisHash) HashIncrInt(key string, field string, value int) (int, error) {
@@ -176,6 +215,10 @@ func (receiver *redisHash) HashIncrInt(key string, field string, value int) (int
 
 	result, err := receiver.GetClient().HIncrBy(context.Background(), key, field, parse.Convert(value, int64(value))).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return parse.ToInt(result), err
 }
 
@@ -184,6 +227,10 @@ func (receiver *redisHash) HashIncrInt64(key string, field string, value int64) 
 
 	result, err := receiver.GetClient().HIncrBy(context.Background(), key, field, value).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -192,6 +239,10 @@ func (receiver *redisHash) HashIncrFloat32(key string, field string, value float
 
 	result, err := receiver.GetClient().HIncrByFloat(context.Background(), key, field, float64(value)).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return parse.ToFloat32(result), err
 }
 
@@ -200,5 +251,9 @@ func (receiver *redisHash) HashIncrFloat64(key string, field string, value float
 
 	result, err := receiver.GetClient().HIncrByFloat(context.Background(), key, field, value).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }

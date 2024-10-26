@@ -3,8 +3,9 @@ package redis
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis/v8"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type redisString struct {
@@ -16,6 +17,10 @@ func (receiver *redisString) StringSet(key string, value any) error {
 	traceDetail := receiver.traceManager.TraceRedis("StringSet", key, "")
 	err := receiver.GetClient().Set(context.Background(), key, value, 0).Err()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return err
 }
 
@@ -27,6 +32,10 @@ func (receiver *redisString) StringGet(key string) (string, error) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -35,6 +44,10 @@ func (receiver *redisString) StringSetEX(key string, value any, expiration time.
 	traceDetail := receiver.traceManager.TraceRedis("StringSetNX", key, "")
 	result, err := receiver.GetClient().SetEX(context.Background(), key, value, expiration).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -43,5 +56,9 @@ func (receiver *redisString) StringSetNX(key string, value any, expiration time.
 	traceDetail := receiver.traceManager.TraceRedis("StringSetNX", key, "")
 	result, err := receiver.GetClient().SetNX(context.Background(), key, value, expiration).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }

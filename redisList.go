@@ -2,9 +2,11 @@ package redis
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	"strings"
 	"time"
+
+	"github.com/farseer-go/fs/parse"
+	"github.com/go-redis/redis/v8"
 )
 
 type redisList struct {
@@ -16,6 +18,10 @@ func (receiver *redisList) ListPushRight(key string, values ...any) (bool, error
 
 	result, err := receiver.GetClient().RPush(context.Background(), key, values).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 
@@ -24,6 +30,10 @@ func (receiver *redisList) ListPushLeft(key string, values ...any) (bool, error)
 
 	result, err := receiver.GetClient().LPush(context.Background(), key, values).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 
@@ -32,10 +42,11 @@ func (receiver *redisList) ListSet(key string, index int64, value any) (bool, er
 
 	result, err := receiver.GetClient().LSet(context.Background(), key, index, value).Result()
 	defer func() { traceDetail.End(err) }()
-	if result == "OK" {
-		return true, err
+
+	if err == nil {
+		traceDetail.SetRows(1)
 	}
-	return false, err
+	return result == "OK", err
 }
 
 func (receiver *redisList) ListRemove(key string, count int64, value any) (bool, error) {
@@ -43,6 +54,10 @@ func (receiver *redisList) ListRemove(key string, count int64, value any) (bool,
 
 	result, err := receiver.GetClient().LRem(context.Background(), key, count, value).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 
@@ -54,6 +69,10 @@ func (receiver *redisList) ListCount(key string) (int64, error) {
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result, err
 }
 
@@ -65,6 +84,10 @@ func (receiver *redisList) ListRange(key string, start int64, stop int64) ([]str
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
 
@@ -73,6 +96,10 @@ func (receiver *redisList) ListLeftPop(timeout time.Duration, keys ...string) ([
 
 	result, err := receiver.GetClient().BLPop(context.Background(), timeout, keys...).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
 
@@ -81,6 +108,10 @@ func (receiver *redisList) ListRightPop(timeout time.Duration, keys ...string) (
 
 	result, err := receiver.GetClient().BRPop(context.Background(), timeout, keys...).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
 
@@ -89,5 +120,9 @@ func (receiver *redisList) ListRightPopPush(source, destination string, timeout 
 
 	result, err := receiver.GetClient().BRPopLPush(context.Background(), source, destination, timeout).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }

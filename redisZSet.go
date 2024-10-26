@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+
+	"github.com/farseer-go/fs/parse"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -26,6 +28,10 @@ func (receiver *redisZSet) ZSetAdd(key string, members ...*redisZ) (bool, error)
 	}
 	result, err := receiver.GetClient().ZAdd(context.Background(), key, redisZZ...).Result()
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(parse.ToInt(result))
+	}
 	return result > 0, err
 }
 
@@ -36,6 +42,10 @@ func (receiver *redisZSet) ZSetScore(key string, member string) (float64, error)
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(1)
+	}
 	return result, err
 }
 
@@ -46,6 +56,10 @@ func (receiver *redisZSet) ZSetRange(key string, start int64, stop int64) ([]str
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
 
@@ -56,6 +70,10 @@ func (receiver *redisZSet) ZSetRevRange(key string, start int64, stop int64) ([]
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
 
@@ -67,5 +85,9 @@ func (receiver *redisZSet) ZSetRangeByScore(key string, opt *redisZRangeBy) ([]s
 		err = nil
 	}
 	defer func() { traceDetail.End(err) }()
+
+	if err == nil {
+		traceDetail.SetRows(len(result))
+	}
 	return result, err
 }
