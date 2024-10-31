@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -50,4 +51,16 @@ func (receiver *redisKey) Exists(keys ...string) (bool, error) {
 	result, err := receiver.GetClient().Exists(context.Background(), keys...).Result()
 	defer func() { traceDetail.End(err) }()
 	return result > 0, err
+}
+
+func (receiver *redisKey) Search(searchKeys string) ([]string, error) {
+	if searchKeys == "*" {
+		return nil, fmt.Errorf("考虑性能影响，不支持仅通过*查找")
+	}
+	traceDetail := receiver.traceManager.TraceRedis("Search", searchKeys, "")
+
+	result := receiver.GetClient().Keys(context.Background(), searchKeys)
+	keys, err := result.Result()
+	defer func() { traceDetail.End(err) }()
+	return keys, err
 }

@@ -1,11 +1,12 @@
 package redis
 
 import (
+	"reflect"
+	"time"
+
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/core"
 	"github.com/go-redis/redis/v8"
-	"reflect"
-	"time"
 )
 
 type IClient interface {
@@ -22,6 +23,8 @@ type IClient interface {
 	Del(keys ...string) (bool, error)
 	// Exists key值是否存在
 	Exists(keys ...string) (bool, error)
+	// 查找Keys，支持*、？匹配
+	Search(searchKeys string) ([]string, error)
 
 	// StringSet 设置缓存
 	StringSet(key string, value any) error
