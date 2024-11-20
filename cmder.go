@@ -1,9 +1,9 @@
 package redis
 
 import (
-	"encoding/json"
 	"reflect"
 
+	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
@@ -26,7 +26,7 @@ func (receiver PipelineCmder) Fill(sliceOrList any) {
 			case *redis.StringCmd:
 				item := reflect.New(itemType).Interface()
 				if jsonVal := cmderType.Val(); jsonVal != "" {
-					_ = json.Unmarshal([]byte(jsonVal), item)
+					_ = sonic.Unmarshal([]byte(jsonVal), item)
 					value = reflect.Append(value, reflect.ValueOf(item).Elem())
 				}
 			case *redis.StringStringMapCmd:
@@ -50,7 +50,7 @@ func (receiver PipelineCmder) Fill(sliceOrList any) {
 			case *redis.StringCmd:
 				item := reflect.New(itemType).Interface()
 				if jsonVal := cmderType.Val(); jsonVal != "" {
-					_ = json.Unmarshal([]byte(jsonVal), item)
+					_ = sonic.Unmarshal([]byte(jsonVal), item)
 					types.ListAdd(value, item)
 				}
 			case *redis.StringStringMapCmd:

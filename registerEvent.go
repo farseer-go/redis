@@ -1,16 +1,17 @@
 package redis
 
 import (
-	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
+	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/sonyflake"
 	"github.com/farseer-go/fs/trace"
-	"strconv"
-	"time"
 )
 
 type registerEvent struct {
@@ -25,7 +26,7 @@ func (receiver *registerEvent) Publish(message any) error {
 	case string:
 		jsonContent = message.(string)
 	default:
-		b, _ := json.Marshal(message)
+		b, _ := sonic.Marshal(message)
 		jsonContent = string(b)
 	}
 	_, err := receiver.client.Publish(receiver.eventName, jsonContent)
@@ -34,11 +35,11 @@ func (receiver *registerEvent) Publish(message any) error {
 
 func (receiver *registerEvent) PublishAsync(message any) {
 	var jsonContent string
-	switch message.(type) {
+	switch msg := message.(type) {
 	case string:
-		jsonContent = message.(string)
+		jsonContent = msg
 	default:
-		b, _ := json.Marshal(message)
+		b, _ := sonic.Marshal(message)
 		jsonContent = string(b)
 	}
 	go receiver.client.Publish(receiver.eventName, jsonContent)
