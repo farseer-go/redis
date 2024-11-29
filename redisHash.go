@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/bytedance/sonic"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/fs/types"
 	"github.com/go-redis/redis/v8"
 )
@@ -21,7 +21,7 @@ type redisHash struct {
 
 func (receiver *redisHash) HashSetEntity(key string, field string, entity any) error {
 	traceDetail := receiver.traceManager.TraceRedis("HashSetEntity", key, field)
-	jsonContent, err := sonic.Marshal(entity)
+	jsonContent, err := snc.Marshal(entity)
 	defer func() { traceDetail.End(err) }()
 
 	if err != nil {
@@ -110,7 +110,7 @@ func (receiver *redisHash) HashToEntity(key string, field string, entity any) (b
 	if err != nil {
 		return false, err
 	}
-	err = sonic.Unmarshal([]byte(jsonContent), entity)
+	err = snc.Unmarshal([]byte(jsonContent), entity)
 
 	if err == nil {
 		traceDetail.SetRows(1)
@@ -139,7 +139,7 @@ func (receiver *redisHash) HashToArray(key string, arrSlice any) error {
 	newArr := reflect.MakeSlice(arrVal.Type(), 0, 0)
 	for _, vJson := range result {
 		item := reflect.New(arrType.Elem()).Interface()
-		_ = sonic.Unmarshal([]byte(vJson), item)
+		_ = snc.Unmarshal([]byte(vJson), item)
 		newArr = reflect.Append(newArr, reflect.ValueOf(item).Elem())
 	}
 	arrVal.Set(newArr)
@@ -165,7 +165,7 @@ func (receiver *redisHash) HashToListAny(key string, itemType reflect.Type) (col
 	}
 	for _, vJson := range result {
 		item := reflect.New(itemType).Interface()
-		_ = sonic.Unmarshal([]byte(vJson), item)
+		_ = snc.Unmarshal([]byte(vJson), item)
 		lst.Add(reflect.ValueOf(item).Elem().Interface())
 	}
 

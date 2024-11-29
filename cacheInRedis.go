@@ -4,13 +4,13 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"github.com/farseer-go/cache"
 	"github.com/farseer-go/cache/eumExpiryType"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/fs/snc"
 )
 
 // 二级缓存-本地缓存操作
@@ -91,7 +91,7 @@ func (r *cacheInRedis) GetItems(cacheIds []any) collections.ListAny {
 	// 转成数组
 	for _, jsonContent := range results {
 		entity := reflect.New(r.itemType).Interface()
-		if err = sonic.Unmarshal([]byte(jsonContent), entity); err == nil {
+		if err = snc.Unmarshal([]byte(jsonContent), entity); err == nil {
 			items.Add(entity)
 		}
 	}
@@ -110,7 +110,7 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 	values := make(map[string]any)
 	for _, item := range val.ToArray() {
 		id := r.GetUniqueId(item)
-		jsonContent, _ := sonic.Marshal(item)
+		jsonContent, _ := snc.Marshal(item)
 		values[id] = string(jsonContent)
 	}
 
