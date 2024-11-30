@@ -103,7 +103,7 @@ func (receiver *registerSubscribe) subscribe() {
 			try.CatchException(func(exp any) {
 				err = flog.Error(exp)
 			})
-			eventTraceContext.End(err)
+			container.Resolve[trace.IManager]().Push(eventTraceContext, err)
 		}
 	}
 }
