@@ -2,9 +2,10 @@ package redis
 
 import (
 	"context"
+	"time"
+
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/flog"
-	"time"
 )
 
 // 分布式锁
@@ -41,7 +42,7 @@ func (receiver *lockResult) TryLock() bool {
 	return result
 }
 
-// TryLockRun 尝试加锁，执行完后，自动释放锁
+// TryLockRun 尝试加锁，执行完后，自动释放锁（未获取到时直接退出）
 func (receiver *lockResult) TryLockRun(fn func()) bool {
 	traceDetail := receiver.traceManager.TraceRedis("TryLockRun", receiver.key, "")
 
