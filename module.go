@@ -35,11 +35,16 @@ func Register(name string, configString any) {
 		return
 	}
 
-	// 注册实例
-	container.Register(func() IClient {
-		return newClient(config)
-	}, name)
+	// 如果之前注册过，则先移除
+	if container.IsRegister[IClient](name) {
+		container.Remove[IClient](name)
+	}
+	container.Register(func() IClient { return newClient(config) }, name)
 
+	// 如果之前注册过，则先移除
+	if container.IsRegister[core.IHealthCheck]("redis_" + name) {
+		container.Remove[core.IHealthCheck]("redis_" + name)
+	}
 	// 注册健康检查
 	container.RegisterInstance[core.IHealthCheck](&healthCheck{name: name}, "redis_"+name)
 }
