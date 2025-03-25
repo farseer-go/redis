@@ -43,7 +43,7 @@ func (receiver PipelineCmder) Fill(sliceOrList any) {
 	// List类型
 	if listType, isList := types.IsList(sliceOrListVal); isList {
 		itemType := types.GetListItemType(listType)
-		value := types.ListNew(listType)
+		value := types.ListNew(listType, len(receiver.cmder))
 
 		for _, cmder := range receiver.cmder {
 			switch cmderType := cmder.(type) {
