@@ -21,7 +21,7 @@ type cacheInRedis struct {
 	itemType    reflect.Type       // itemType
 	key         string             // 缓存KEY
 	lastVisitAt time.Time          // 最后一次访问时间
-	unSetTTl    bool               // 绝对时间策略时，标记是否设置过过期时间
+	unSetTTl    bool               // 绝对时间策略时使用，标记是否设置过过期时间
 	redisClient IClient            // redis client
 }
 
@@ -44,8 +44,16 @@ func newCache(key string, uniqueField string, itemType reflect.Type, redisConfig
 
 	if r.expiry > 0 {
 		go r.updateTtl()
-	}
 
+		// 如果设置了过期时间，需要检查下TTL
+		if exists, _ := r.redisClient.Exists(key); exists {
+			ttl, _ := r.redisClient.TTL(key)
+			if ttl <= 0 || ttl > r.expiry {
+				// 如果过期时间比当前设置的过期时间还大，则需要重新设置
+				r.setTTL()
+			}
+		}
+	}
 	return r
 }
 
@@ -190,8 +198,8 @@ func (r *cacheInRedis) updateTtl() {
 
 	ticker := time.NewTicker(expiry)
 	for range ticker.C {
-		// 绝对时间的情况下，这时redis已自动过期了，所以需要将状态重新标记为：未设置状态
-		if r.expiryType == eumExpiryType.SlidingExpiration {
+		// 绝对时间的情况下，这时redis已自动过期了，所以恢复成未设置，在其它地方需要根据这个值来决定是否要重新设置TTL
+		if r.expiryType == eumExpiryType.AbsoluteExpiration {
 			r.unSetTTl = false
 		} else if r.expiryType == eumExpiryType.SlidingExpiration && !r.lastVisitAt.IsZero() {
 			r.setTTL()
