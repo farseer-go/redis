@@ -144,11 +144,13 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 }
 
 func (r *cacheInRedis) Remove(cacheId any) {
+	r.unSetTTl = false
 	_, err := r.redisClient.HashDel(r.key, parse.Convert(cacheId, ""))
 	flog.ErrorIfExists(err)
 }
 
 func (r *cacheInRedis) Clear() {
+	r.unSetTTl = false
 	_, err := r.redisClient.Del(r.key)
 	flog.ErrorIfExists(err)
 }

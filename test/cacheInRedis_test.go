@@ -164,9 +164,24 @@ func TestCacheInRedis_Ttl2(t *testing.T) {
 	assert.Equal(t, ttl, time.Duration(-1))
 
 	// 前面没有设置TTL，这里验证是否生效
-	redis.SetProfiles[po](key, "Name", "default", func(op *cache.Op) {
+	cacheManage = redis.SetProfiles[po](key, "Name", "default", func(op *cache.Op) {
 		op.AbsoluteExpiration(30 * time.Minute)
 	})
+	cacheManage.SetItemSource(func(cacheId any) (po, bool) {
+		return po{Name: "steden", Age: 18}, true
+	})
+
+	ttl, _ = redisClient.TTL(key)
+	assert.Equal(t, ttl, 30*time.Minute)
+
+	cacheManage.Remove("steden")
+	p, _ = cacheManage.GetItem("steden")
+	assert.Equal(t, p.Age, 18)
+
+	cacheManage.Clear()
+	p, _ = cacheManage.GetItem("steden")
+	assert.Equal(t, p.Age, 18)
+
 	ttl, _ = redisClient.TTL(key)
 	assert.Equal(t, ttl, 30*time.Minute)
 }
