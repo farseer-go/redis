@@ -62,3 +62,51 @@ func (receiver *redisString) StringSetNX(key string, value any, expiration time.
 	}
 	return result, err
 }
+
+// StringIncrInt String对int加减
+func (receiver *redisString) StringIncrInt(key string, value int) (int, error) {
+	traceDetail := receiver.traceManager.TraceRedis("StringIncrInt", key, "")
+	result, err := receiver.GetClient().IncrBy(context.Background(), key, int64(value)).Result()
+	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result > 0 {
+		traceDetail.SetRows(1)
+	}
+	return int(result), err
+}
+
+// StringIncrInt64 String对int64加减
+func (receiver *redisString) StringIncrInt64(key string, value int64) (int64, error) {
+	traceDetail := receiver.traceManager.TraceRedis("StringIncrInt64", key, "")
+	result, err := receiver.GetClient().IncrBy(context.Background(), key, value).Result()
+	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result > 0 {
+		traceDetail.SetRows(1)
+	}
+	return result, err
+}
+
+// StringIncrFloat32 String对float32加减
+func (receiver *redisString) StringIncrFloat32(key string, value float32) (float32, error) {
+	traceDetail := receiver.traceManager.TraceRedis("StringIncrFloat32", key, "")
+	result, err := receiver.GetClient().IncrByFloat(context.Background(), key, float64(value)).Result()
+	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result > 0 {
+		traceDetail.SetRows(1)
+	}
+	return float32(result), err
+}
+
+// StringIncrFloat64 String对float64加减
+func (receiver *redisString) StringIncrFloat64(key string, value float64) (float64, error) {
+	traceDetail := receiver.traceManager.TraceRedis("StringIncrFloat64", key, "")
+	result, err := receiver.GetClient().IncrByFloat(context.Background(), key, value).Result()
+	defer func() { traceDetail.End(err) }()
+
+	if err == nil && result > 0 {
+		traceDetail.SetRows(1)
+	}
+	return result, err
+}

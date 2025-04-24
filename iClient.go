@@ -35,6 +35,15 @@ type IClient interface {
 	// StringSetEX 设置过期时间（如果KEY存在，则会覆盖）
 	StringSetEX(key string, value any, expiration time.Duration) (string, error)
 
+	// StringIncrInt String对int加减
+	StringIncrInt(key string, value int) (int, error)
+	// StringIncrInt64 String对int64加减
+	StringIncrInt64(key string, value int64) (int64, error)
+	// StringIncrFloat32 String对float32加减
+	StringIncrFloat32(key string, value float32) (float32, error)
+	// StringIncrFloat64 String对float64加减
+	StringIncrFloat64(key string, value float64) (float64, error)
+
 	// HashSetEntity 添加并序列化成json
 	HashSetEntity(key string, field string, entity any) error
 	// HashSet 添加
