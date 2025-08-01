@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/farseer-go/fs/asyncLocal"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/exception"
@@ -83,6 +84,8 @@ func (receiver *registerSubscribe) RegisterSubscribe(subscribeName string, consu
 func (receiver *registerSubscribe) subscribe() {
 	server := fmt.Sprintf("redis订阅/%s", receiver.client.Original().String())
 	for message := range receiver.client.Subscribe(receiver.eventName) {
+		// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
+		asyncLocal.InitContext()
 		eventArgs := core.EventArgs{
 			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
 			CreateAt:   time.Now().UnixMilli(),
@@ -100,5 +103,6 @@ func (receiver *registerSubscribe) subscribe() {
 			})
 			container.Resolve[trace.IManager]().Push(eventTraceContext, nil)
 		}
+		asyncLocal.Release()
 	}
 }
