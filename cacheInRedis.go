@@ -15,13 +15,12 @@ import (
 
 // 二级缓存-本地缓存操作
 type cacheInRedis struct {
-	expiry      time.Duration      // 设置Memory缓存过期时间
+	expiry      time.Duration      // 设置Redis缓存过期时间
 	expiryType  eumExpiryType.Enum // 过期策略
 	uniqueField string             // hash中的主键（唯一ID的字段名称）
 	itemType    reflect.Type       // itemType
 	key         string             // 缓存KEY
 	lastVisitAt time.Time          // 最后一次访问时间
-	unSetTTl    bool               // 绝对时间策略时使用，标记是否设置过过期时间
 	redisClient IClient            // redis client
 }
 
@@ -44,15 +43,6 @@ func newCache(key string, uniqueField string, itemType reflect.Type, redisConfig
 
 	if r.expiry > 0 {
 		go r.updateTtl()
-
-		// 如果设置了过期时间，需要检查下TTL
-		if exists, _ := r.redisClient.Exists(key); exists {
-			ttl, _ := r.redisClient.TTL(key)
-			if ttl <= 0 || ttl > r.expiry {
-				// 如果过期时间比当前设置的过期时间还大，则需要重新设置
-				r.setTTL()
-			}
-		}
 	}
 	return r
 }
@@ -136,21 +126,14 @@ func (r *cacheInRedis) SaveItem(newVal any) {
 	newValDataKey := r.GetUniqueId(newVal)
 	err := r.redisClient.HashSetEntity(r.key, newValDataKey, newVal)
 	flog.ErrorIfExists(err)
-
-	// 如果直接调用SaveItem方法，会导致绝对时间策略的情况下，没有设置TTL。
-	if r.expiry > 0 && r.expiryType == eumExpiryType.AbsoluteExpiration && !r.unSetTTl {
-		r.setTTL()
-	}
 }
 
 func (r *cacheInRedis) Remove(cacheId any) {
-	r.unSetTTl = false
 	_, err := r.redisClient.HashDel(r.key, parse.Convert(cacheId, ""))
 	flog.ErrorIfExists(err)
 }
 
 func (r *cacheInRedis) Clear() {
-	r.unSetTTl = false
 	_, err := r.redisClient.Del(r.key)
 	flog.ErrorIfExists(err)
 }
@@ -198,19 +181,24 @@ func (r *cacheInRedis) updateTtl() {
 		expiry = r.expiry - 100*time.Millisecond
 	}
 
-	ticker := time.NewTicker(expiry)
-	for range ticker.C {
+	for {
 		// 绝对时间的情况下，这时redis已自动过期了，所以恢复成未设置，在其它地方需要根据这个值来决定是否要重新设置TTL
 		if r.expiryType == eumExpiryType.AbsoluteExpiration {
-			r.unSetTTl = false
+			// 如果设置了过期时间，需要检查下TTL
+			ttl, _ := r.redisClient.TTL(r.key)
+			if ttl == -1 || ttl > r.expiry {
+				// 如果过期时间比当前设置的过期时间还大，则需要重新设置
+				r.setTTL()
+			}
 		} else if r.expiryType == eumExpiryType.SlidingExpiration && !r.lastVisitAt.IsZero() {
 			r.setTTL()
 		}
+
+		time.Sleep(expiry)
 	}
 }
 
 func (r *cacheInRedis) setTTL() {
 	r.lastVisitAt = time.Time{}
-	r.unSetTTl = true
 	_, _ = r.redisClient.SetTTL(r.key, r.expiry)
 }
