@@ -22,6 +22,7 @@ type cacheInRedis struct {
 	key         string             // 缓存KEY
 	lastVisitAt time.Time          // 最后一次访问时间
 	redisClient IClient            // redis client
+	isSetTtl    bool               // 用于记录，是否需要设置TTL
 }
 
 // 创建实例
@@ -39,6 +40,7 @@ func newCache(key string, uniqueField string, itemType reflect.Type, redisConfig
 		key:         key,
 		redisClient: container.Resolve[IClient](redisConfigName),
 		lastVisitAt: time.Now(),
+		isSetTtl:    false,
 	}
 
 	if r.expiry > 0 {
@@ -48,11 +50,12 @@ func newCache(key string, uniqueField string, itemType reflect.Type, redisConfig
 }
 
 func (r *cacheInRedis) Get() collections.ListAny {
-	r.updateExpiry()
 	// 从redis hash中读取到slice
 	lst, err := r.redisClient.HashToListAny(r.key, r.itemType)
 	flog.ErrorIfExists(err)
 
+	r.updateExpiry()
+	r.trySetTTL()
 	return lst
 }
 
@@ -68,6 +71,8 @@ func (r *cacheInRedis) GetItem(cacheId any) any {
 	}
 
 	r.updateExpiry()
+	r.trySetTTL()
+
 	return reflect.ValueOf(entityPtr).Elem().Interface()
 }
 
@@ -95,6 +100,7 @@ func (r *cacheInRedis) GetItems(cacheIds []any) collections.ListAny {
 	}
 
 	r.updateExpiry()
+	r.trySetTTL()
 	return items
 }
 
@@ -102,7 +108,6 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 	if val.Count() == 0 {
 		return
 	}
-	r.updateExpiry()
 
 	// 将ListAny转成map
 	values := make(map[string]any)
@@ -117,15 +122,18 @@ func (r *cacheInRedis) Set(val collections.ListAny) {
 
 	// 设置缓存失效时间
 	if r.expiry > 0 {
+		r.updateExpiry()
 		r.setTTL()
 	}
 }
 
 func (r *cacheInRedis) SaveItem(newVal any) {
-	r.updateExpiry()
 	newValDataKey := r.GetUniqueId(newVal)
 	err := r.redisClient.HashSetEntity(r.key, newValDataKey, newVal)
 	flog.ErrorIfExists(err)
+
+	r.updateExpiry()
+	r.trySetTTL()
 }
 
 func (r *cacheInRedis) Remove(cacheId any) {
@@ -136,24 +144,30 @@ func (r *cacheInRedis) Remove(cacheId any) {
 func (r *cacheInRedis) Clear() {
 	_, err := r.redisClient.Del(r.key)
 	flog.ErrorIfExists(err)
+	r.isSetTtl = false
 }
 
 func (r *cacheInRedis) Count() int {
 	r.updateExpiry()
+	r.trySetTTL()
 	return r.redisClient.HashCount(r.key)
 }
 
 func (r *cacheInRedis) ExistsItem(cacheId any) bool {
-	r.updateExpiry()
 	exists, err := r.redisClient.HashExists(r.key, parse.Convert(cacheId, ""))
 	flog.ErrorIfExists(err)
+
+	r.updateExpiry()
+	r.trySetTTL()
 	return exists
 }
 
 func (r *cacheInRedis) ExistsKey() bool {
-	r.updateExpiry()
 	exists, err := r.redisClient.Exists(r.key)
 	flog.ErrorIfExists(err)
+
+	r.updateExpiry()
+	r.trySetTTL()
 	return exists
 }
 
@@ -182,12 +196,12 @@ func (r *cacheInRedis) updateTtl() {
 	}
 
 	for {
+		r.isSetTtl = false
 		// 绝对时间的情况下，这时redis已自动过期了，所以恢复成未设置，在其它地方需要根据这个值来决定是否要重新设置TTL
 		if r.expiryType == eumExpiryType.AbsoluteExpiration {
 			// 如果设置了过期时间，需要检查下TTL
-			ttl, _ := r.redisClient.TTL(r.key)
-			if ttl == -1 || ttl > r.expiry {
-				// 如果过期时间比当前设置的过期时间还大，则需要重新设置
+			// 如果过期时间比当前设置的过期时间还大，则需要重新设置
+			if ttl, _ := r.redisClient.TTL(r.key); ttl == -1 || ttl > r.expiry {
 				r.setTTL()
 			}
 		} else if r.expiryType == eumExpiryType.SlidingExpiration && !r.lastVisitAt.IsZero() {
@@ -199,6 +213,14 @@ func (r *cacheInRedis) updateTtl() {
 }
 
 func (r *cacheInRedis) setTTL() {
+	r.isSetTtl = true
 	r.lastVisitAt = time.Time{}
 	_, _ = r.redisClient.SetTTL(r.key, r.expiry)
+}
+
+// 如果未设置ttl，则要设置
+func (r *cacheInRedis) trySetTTL() {
+	if r.expiry > 0 && r.expiryType == eumExpiryType.AbsoluteExpiration && !r.isSetTtl {
+		r.setTTL()
+	}
 }
