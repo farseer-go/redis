@@ -18,6 +18,8 @@ func (module Module) DependsModule() []modules.FarseerModule {
 
 func (module Module) PreInitialize() {
 	container.Register(func() cache.ICache { return &cacheInRedis{} }, "redis")
+	// 注册包级别的连接检查器（默认实现）
+	container.Register(func() core.IConnectionChecker { return &connectionChecker{} }, "redis")
 }
 
 func (module Module) Initialize() {
