@@ -84,27 +84,31 @@ func (receiver *registerSubscribe) RegisterSubscribe(subscribeName string, consu
 
 func (receiver *registerSubscribe) subscribe() {
 	server := fmt.Sprintf("redis订阅/%s", receiver.client.Original().String())
-	for message := range receiver.client.Subscribe(receiver.eventName) {
-		eventArgs := core.EventArgs{
-			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
-			CreateAt:   time.Now().UnixMilli(),
-			Message:    message.Payload,
-			ErrorCount: 0,
-			EventName:  message.Channel,
-		}
+	for {
+		for message := range receiver.client.Subscribe(receiver.eventName) {
+			eventArgs := core.EventArgs{
+				Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
+				CreateAt:   time.Now().UnixMilli(),
+				Message:    message.Payload,
+				ErrorCount: 0,
+				EventName:  message.Channel,
+			}
 
-		// 同时订阅消费
-		for subscribeName, consumerFunc := range receiver.consumers {
-			// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
-			asyncLocal.InitContext()
-			// 创建一个事件消费入口
-			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
-			exception.Try(func() {
-				consumerFunc(message.Payload, eventArgs)
-			})
-			container.Resolve[trace.IManager]().Push(eventTraceContext, nil)
-			asyncLocal.Release()
+			// 同时订阅消费
+			for subscribeName, consumerFunc := range receiver.consumers {
+				// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
+				asyncLocal.InitContext()
+				// 创建一个事件消费入口
+				eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
+				exception.Try(func() {
+					consumerFunc(message.Payload, eventArgs)
+				})
+				container.Resolve[trace.IManager]().Push(eventTraceContext, nil)
+				asyncLocal.Release()
+			}
 		}
+		// channel 关闭说明连接断开，等待后重新订阅
+		flog.Warningf("%s,事件: %s 连接断开，3秒后重新订阅...", server, receiver.eventName)
+		time.Sleep(3 * time.Second)
 	}
-	flog.Warningf("%s,事件: %s 已退出!", server, receiver.eventName)
 }
