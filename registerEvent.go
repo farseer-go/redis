@@ -9,6 +9,7 @@ import (
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/exception"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/fs/sonyflake"
 	"github.com/farseer-go/fs/trace"
@@ -105,4 +106,5 @@ func (receiver *registerSubscribe) subscribe() {
 			asyncLocal.Release()
 		}
 	}
+	flog.Warningf("%s,事件: %s 已退出!", server, receiver.eventName)
 }
