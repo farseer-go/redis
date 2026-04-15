@@ -22,9 +22,9 @@ type registerEvent struct {
 
 func (receiver *registerEvent) Publish(message any) error {
 	var jsonContent string
-	switch message.(type) {
+	switch message := message.(type) {
 	case string:
-		jsonContent = message.(string)
+		jsonContent = message
 	default:
 		b, _ := snc.Marshal(message)
 		jsonContent = string(b)
@@ -84,8 +84,6 @@ func (receiver *registerSubscribe) RegisterSubscribe(subscribeName string, consu
 func (receiver *registerSubscribe) subscribe() {
 	server := fmt.Sprintf("redis订阅/%s", receiver.client.Original().String())
 	for message := range receiver.client.Subscribe(receiver.eventName) {
-		// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
-		asyncLocal.InitContext()
 		eventArgs := core.EventArgs{
 			Id:         strconv.FormatInt(sonyflake.GenerateId(), 10),
 			CreateAt:   time.Now().UnixMilli(),
@@ -96,13 +94,15 @@ func (receiver *registerSubscribe) subscribe() {
 
 		// 同时订阅消费
 		for subscribeName, consumerFunc := range receiver.consumers {
+			// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
+			asyncLocal.InitContext()
 			// 创建一个事件消费入口
 			eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
 			exception.Try(func() {
 				consumerFunc(message.Payload, eventArgs)
 			})
 			container.Resolve[trace.IManager]().Push(eventTraceContext, nil)
+			asyncLocal.Release()
 		}
-		asyncLocal.Release()
 	}
 }
