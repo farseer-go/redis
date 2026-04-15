@@ -15,22 +15,31 @@ type redisElection struct {
 
 // Election 选举成功后，会自动续约。
 // 未拿到master，会持续尝试获取master
-func (receiver *redisElection) Election(key string, fn func()) {
+func (receiver *redisElection) Election(ctx context.Context, key string, fn func()) {
 	for {
-		cmd := receiver.rdb.SetNX(context.Background(), key, core.AppId, 20*time.Second)
+		cmd := receiver.rdb.SetNX(ctx, key, core.AppId, 20*time.Second)
 		// 拿到锁了
 		if result, err := cmd.Result(); result && err == nil {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx2, cancel := context.WithCancel(ctx)
+			defer cancel()
+
 			// 给锁续租约
-			go receiver.leaseRenewal(key, ctx)
+			go receiver.leaseRenewal(key, ctx2)
 			fn()
-			cancel()
 			return
 		}
 
 		// 没有拿到master的节点，需获取当前租约剩余时间，到期后，尝试获取
-		duration, _ := receiver.rdb.TTL(context.Background(), key).Result()
-		<-time.After(duration)
+		duration, err := receiver.rdb.TTL(context.Background(), key).Result()
+		if err != nil || duration <= 0 {
+			duration = time.Second // 兜底，避免忙循环
+		}
+
+		select {
+		case <-ctx.Done(): // 立即退出
+			return
+		case <-time.After(duration):
+		}
 	}
 }
 

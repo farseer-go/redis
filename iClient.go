@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"reflect"
 	"time"
 
@@ -152,7 +153,7 @@ type IClient interface {
 	// Subscribe 订阅消息
 	Subscribe(channels ...string) <-chan *redis.Message
 	// Election 选举
-	Election(key string, fn func())
+	Election(ctx context.Context, key string, fn func())
 	// GetLeaderId 获取当前LeaderId
 	GetLeaderId(key string) int64
 
