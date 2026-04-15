@@ -99,11 +99,15 @@ func (receiver *registerSubscribe) subscribe() {
 				// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
 				asyncLocal.InitContext()
 				// 创建一个事件消费入口
-				eventTraceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
+				traceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
 				exception.Try(func() {
 					consumerFunc(message.Payload, eventArgs)
+				}).CatchException(func(exp any) {
+					if traceContext.IsIgnore() { // 如果忽略了链路,则要在这里打印错误日志
+						flog.Errorf("%s,%s 异常: %v", server, receiver.eventName, exp)
+					}
 				})
-				container.Resolve[trace.IManager]().Push(eventTraceContext, nil)
+				container.Resolve[trace.IManager]().Push(traceContext, nil)
 				asyncLocal.Release()
 			}
 		}
