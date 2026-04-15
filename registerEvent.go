@@ -3,9 +3,11 @@ package redis
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/farseer-go/fs/asyncLocal"
+	"github.com/farseer-go/fs/color"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/exception"
@@ -104,7 +106,11 @@ func (receiver *registerSubscribe) subscribe() {
 					consumerFunc(message.Payload, eventArgs)
 				}).CatchException(func(exp any) {
 					if traceContext.IsIgnore() { // 如果忽略了链路,则要在这里打印错误日志
-						flog.Errorf("%s,%s 异常: %v", server, receiver.eventName, exp)
+						lstLogs := []string{fmt.Sprintf("%s,%s 异常: %v", server, receiver.eventName, exp)}
+						for index, exceptionStackDetail := range trace.GetCallerInfo() {
+							lstLogs = append(lstLogs, fmt.Sprintf("\t%d、%s:%s %s", index+1, exceptionStackDetail.ExceptionCallFile, color.Yellow(exceptionStackDetail.ExceptionCallLine), color.Red(exceptionStackDetail.ExceptionCallFuncName)))
+						}
+						flog.Error(strings.Join(lstLogs, "\n") + "\n")
 					}
 				})
 				container.Resolve[trace.IManager]().Push(traceContext, nil)
