@@ -62,7 +62,7 @@ func RegisterEvent(redisConfigName, eventName string) *registerSubscribe {
 		return &registerEvent{
 			eventName:    eventName,
 			client:       redisClient,
-			traceManager: container.Resolve[trace.IManager](),
+			traceManager: trace.Manager(),
 		}
 	}, eventName)
 
@@ -101,7 +101,7 @@ func (receiver *registerSubscribe) subscribe() {
 				// InitContext 初始化同一协程上下文，避免在同一协程中多次初始化
 				asyncLocal.InitContext()
 				// 创建一个事件消费入口
-				traceContext := container.Resolve[trace.IManager]().EntryEventConsumer(server, receiver.eventName, subscribeName)
+				traceContext := trace.Manager().EntryEventConsumer(server, receiver.eventName, subscribeName)
 				exception.Try(func() {
 					consumerFunc(message.Payload, eventArgs)
 				}).CatchException(func(exp any) {
@@ -113,7 +113,7 @@ func (receiver *registerSubscribe) subscribe() {
 						flog.Error(strings.Join(lstLogs, "\n") + "\n")
 					}
 				})
-				container.Resolve[trace.IManager]().Push(traceContext, nil)
+				trace.Manager().Push(traceContext, nil)
 				asyncLocal.Release()
 			}
 		}

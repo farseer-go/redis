@@ -1,11 +1,12 @@
 package redis
 
 import (
+	"time"
+
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/trace"
 	"github.com/go-redis/redis/v8"
-	"time"
 )
 
 type client struct {
@@ -33,7 +34,7 @@ func newClient(redisConfig redisConfig) IClient {
 		ReadTimeout:  time.Duration(redisConfig.ResponseTimeout) * time.Millisecond, //响应超时时间设置
 	})
 	rm := &redisManager{
-		traceManager: container.Resolve[trace.IManager](),
+		traceManager: trace.Manager(),
 		rdb:          rdb,
 	}
 	return &client{
@@ -58,7 +59,7 @@ func (receiver *client) RegisterEvent(eventName string) *registerSubscribe {
 		return &registerEvent{
 			eventName:    eventName,
 			client:       receiver,
-			traceManager: container.Resolve[trace.IManager](),
+			traceManager: trace.Manager(),
 		}
 	}, eventName)
 
